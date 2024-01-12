@@ -1,0 +1,11 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "environments/default"
+  },
+  "spec": {
+    "namespace": "delivery-ratings",
+    "apiServer": "https://k8s.blindfolded.surgery:6443"
+  }
+}
