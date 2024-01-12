@@ -9,14 +9,14 @@ ENV PATH=$PATH:/app/.local/bin
 
 WORKDIR /app
 
-RUN pip install pipx==1.4.0 --user --no-cache
-RUN pipx install poetry==1.6.1
+RUN pip install pipx==1.4.2 --user --no-cache
+RUN pipx install poetry==1.7.1
 RUN poetry config virtualenvs.create false
 
-COPY --chown=app:app [ "poetry.lock", "pyproject.toml", "./" ]
+COPY --chown=app:app [ "poetry.lock", "pyproject.toml", "README.md", "./" ]
 
-COPY --chown=app:app src/cure-freedom-bot ./src/cure-freedom-bot
+COPY --chown=app:app src/provider ./src/provider
 
-RUN poetry install
+RUN poetry install --only main
 
-ENTRYPOINT [ "poetry", "run", "python", "src/cure-freedom-bot/main.py" ]
+ENTRYPOINT [ "poetry", "run", "python", "-m", "provider" ]

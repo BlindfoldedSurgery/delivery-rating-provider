@@ -4,13 +4,12 @@ version = "0.1.0"
 description = ""
 authors = ["Torben Carstens <git@carstens.tech>"]
 readme = "README.md"
-packages = [{include = "provider", from = "src"}]
+packages = [{ include = "provider", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 httpx = ">=0.25.2,<0.26.0"
 python-telegram-bot = "^20.7"
-
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.7.1"
