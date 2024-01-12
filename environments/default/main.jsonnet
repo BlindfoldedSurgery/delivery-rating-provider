@@ -2,12 +2,9 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
 
 {
   config:: {
+    name: "provider",
     sts: {
-      name: 'provider',
       image: std.join(":", [std.extVar("IMAGE_NAME"), std.extVar("IMAGE_TAG")]),
-    },
-    secret: {
-      name: 'provider',
     },
   },
 
@@ -18,14 +15,14 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
 
   bot: {
     deployment: sts.new(
-      name=$.config.sts.name,
+      name=$.config.name,
       replicas=1,
       containers=[
         container.new(
-          $.config.sts.name,
+          $.config.name,
           $.config.sts.image
         ) + container.withEnvFrom([
-          envFromSource.secretRef.withName($.config.secret.name),
+          envFromSource.secretRef.withName($.config.name),
         ]) + container.withResourcesRequests(
           cpu='50m',
           memory='50Mi'
@@ -36,7 +33,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
       ],
     ),
     secret: secret.new(
-      name=$.config.secret.name,
+      name=$.config.name,
       data={
         BOT_TOKEN: std.extVar('BOT_TOKEN'),
       }
