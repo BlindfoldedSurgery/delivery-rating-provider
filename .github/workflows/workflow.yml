@@ -48,7 +48,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@v4
       - uses: BlindfoldedSurgery/actions-tanka@main
         env:
-          IMAGE_NAME: "ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}/${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}"
+          IMAGE_NAME: "ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}/${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}:${GITHUB_SHA}"
         with:
           subcommand: apply
           environment: default
