@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "delivery-rating-provider"
+version = "0.1.0"
+description = ""
+authors = ["Torben Carstens <git@carstens.tech>"]
+readme = "README.md"
+packages = [{include = "provider", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+httpx = ">=0.25.2,<0.26.0"
+python-telegram-bot = "^20.7"
+ruff = "^0.1.12"
+pytest = "^7.4.4"
+pytest-asyncio = "^0.23.3"
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.7.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
