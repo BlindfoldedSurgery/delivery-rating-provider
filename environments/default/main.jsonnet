@@ -4,7 +4,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
   config:: {
     sts: {
       name: 'provider',
-      image: std.extVar("IMAGE_NAME"),
+      image: std.join(":", [std.extVar("IMAGE_NAME"), std.extVar("IMAGE_TAG")]),
     },
     secret: {
       name: 'provider',
