@@ -42,6 +42,7 @@ jobs:
     concurrency: production
     steps:
       - uses: actions/checkout@v4
+      - run: sed -i 's/python.*//' .tool-versions
       - uses: asdf-vm/actions/install@v3
       - run: jb install
       - uses: rlespinasse/github-slug-action@v4
