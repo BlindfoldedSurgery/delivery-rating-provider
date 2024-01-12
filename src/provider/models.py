@@ -32,7 +32,7 @@ def escape_markdown(text: str) -> str:
         "!",
     ]
     for reserved in reserved_characters:
-        text = text.replace(reserved, fr"\{reserved}")
+        text = text.replace(reserved, rf"\{reserved}")
 
     return text
 
@@ -47,7 +47,9 @@ def to_pascal_case(s: str) -> str:
 
 class IdEnum(Enum):
     @staticmethod
-    def _generate_next_value_(name: str, start: int, count: int, last_values: list) -> str:
+    def _generate_next_value_(
+        name: str, start: int, count: int, last_values: list
+    ) -> str:
         return name
 
     @classmethod
@@ -132,7 +134,9 @@ class Location:
 
     def link(self) -> str:
         # see https://developers.google.com/maps/documentation/urls/get-started#search-examples
-        return f"https://www.google.com/maps/search/?api=1&query={self.lat}%2C{self.lon}"
+        return (
+            f"https://www.google.com/maps/search/?api=1&query={self.lat}%2C{self.lon}"
+        )
 
     def _street_address(self) -> str:
         if self.street_address:
@@ -141,7 +145,7 @@ class Location:
         return f"{self.street_name} {self.street_number}"
 
     def telegram_markdown_v2(self) -> str:
-        return fr"""{escape_markdown(self._street_address())} \({escape_markdown(self.city)}\)
+        return rf"""{escape_markdown(self._street_address())} \({escape_markdown(self.city)}\)
 [Google Maps]({(escape_markdown(self.link()))})"""
 
 
@@ -253,12 +257,19 @@ class ShippingInfo:
         except KeyError:
             lowest_delivery_fee = None
         try:
-            duration_range = (int(d["durationRange"]["min"]), int(d["durationRange"]["max"]))
+            duration_range = (
+                int(d["durationRange"]["min"]),
+                int(d["durationRange"]["max"]),
+            )
         except KeyError:
             duration_range = None
         duration = int(d["duration"]) if "duration" in d else None
-        delivery_fee_default = float(d["deliveryFeeDefault"]) / 100 if "deliveryFeeDefault" in d else None
-        min_order_value = float(d["minOrderValue"]) / 100 if "minOrderValue" in d else None
+        delivery_fee_default = (
+            float(d["deliveryFeeDefault"]) / 100 if "deliveryFeeDefault" in d else None
+        )
+        min_order_value = (
+            float(d["minOrderValue"]) / 100 if "minOrderValue" in d else None
+        )
 
         return cls(
             _type,
@@ -344,7 +355,7 @@ class RestaurantListItem:
             location,
             supports,
             shipping_infos,
-            payment_methods
+            payment_methods,
         )
 
     def offers_delivery(self) -> bool:
@@ -362,7 +373,9 @@ class RestaurantListItem:
 
 class Weekday(Enum):
     @staticmethod
-    def _generate_next_value_(name: str, start: int, count: int, last_values: list) -> int:
+    def _generate_next_value_(
+        name: str, start: int, count: int, last_values: list
+    ) -> int:
         return len(last_values)
 
     Sunday = auto()
@@ -511,7 +524,10 @@ class Delivery:
     def from_dict(cls, d: dict) -> Self:
         duration_range: Tuple[int, int] | None
         try:
-            duration_range = (int(d["durationRange"]["min"]), int(d["durationRange"]["max"]))
+            duration_range = (
+                int(d["durationRange"]["min"]),
+                int(d["durationRange"]["max"]),
+            )
         except KeyError:
             duration_range = None
 
@@ -551,10 +567,7 @@ class OptionMetric:
 
     @classmethod
     def from_dict(cls, d: dict) -> Self:
-        return cls(
-            d["unit"],
-            int(d["quantity"]) if d["quantity"] else None
-        )
+        return cls(d["unit"], int(d["quantity"]) if d["quantity"] else None)
 
 
 @dataclass
@@ -588,9 +601,11 @@ class Option:
             int(d["pricePerUnitPickup"]) if d["pricePerUnitPickup"] else None,
             int(d["pricePerUnitDelivery"]) if d["pricePerUnitDelivery"] else None,
             float(d["alcoholVolume"].replace(",", ".")) if d["alcoholVolume"] else None,
-            float(d["caffeineAmount"].replace(",", ".")) if d["caffeineAmount"] else None,
+            float(d["caffeineAmount"].replace(",", "."))
+            if d["caffeineAmount"]
+            else None,
             d["isSoldOut"],
-            d["isExcludedFromMov"]
+            d["isExcludedFromMov"],
         )
 
 
@@ -649,7 +664,11 @@ class Variant:
         return cls(
             d["id"],
             d["name"],
-            [option_group for option_group in option_groups if option_group in d["optionGroupIds"]],
+            [
+                option_group
+                for option_group in option_groups
+                if option_group in d["optionGroupIds"]
+            ],
             [ShippingType.from_key(s) for s in d["shippingTypes"]],
             OptionPrices.from_dict(d["prices"]),
             OptionMetric.from_dict(d["metric"]),
@@ -657,9 +676,11 @@ class Variant:
             int(d["pricePerUnitPickup"]) if d["pricePerUnitPickup"] else None,
             int(d["pricePerUnitDelivery"]) if d["pricePerUnitDelivery"] else None,
             float(d["alcoholVolume"].replace(",", ".")) if d["alcoholVolume"] else None,
-            float(d["caffeineAmount"].replace(",", ".")) if d["caffeineAmount"] else None,
+            float(d["caffeineAmount"].replace(",", "."))
+            if d["caffeineAmount"]
+            else None,
             d["isSoldOut"],
-            d["isExcludedFromMov"]
+            d["isExcludedFromMov"],
         )
 
 
@@ -672,14 +693,16 @@ class Product:
     variants: list[Variant]
 
     @classmethod
-    def from_item(cls, item: Tuple[str, dict], option_groups: list[OptionGroup]) -> Self:
+    def from_item(
+        cls, item: Tuple[str, dict], option_groups: list[OptionGroup]
+    ) -> Self:
         _id, d = item
         return cls(
             _id,
             d["name"],
             d["description"],
             d["imageUrl"],
-            [Variant.from_dict(v, option_groups) for v in d["variants"]]
+            [Variant.from_dict(v, option_groups) for v in d["variants"]],
         )
 
 
@@ -699,7 +722,9 @@ class Category:
         time_restrictions = []
         for time_restriction in d.get("timeRestrictions", {}).items():
             try:
-                time_restrictions.append(DeliveryTimeframesDay.from_item(time_restriction))
+                time_restrictions.append(
+                    DeliveryTimeframesDay.from_item(time_restriction)
+                )
             except IndexError:
                 pass
 
@@ -724,10 +749,7 @@ class Currency:
 
     @classmethod
     def from_dict(cls, d: dict) -> Self:
-        return cls(
-            int(d["demoninator"]),
-            CurrencyCode.from_key(d["currencyCode"])
-        )
+        return cls(int(d["demoninator"]), CurrencyCode.from_key(d["currencyCode"]))
 
 
 class DiscountType(IdEnum):
@@ -793,9 +815,13 @@ class Menu:
     @classmethod
     def from_dict(cls, d: dict) -> Self:
         options = [Option.from_item(o) for o in d["options"].items()]
-        option_groups = [OptionGroup.from_item(o, options) for o in d["optionGroups"].items()]
+        option_groups = [
+            OptionGroup.from_item(o, options) for o in d["optionGroups"].items()
+        ]
         products = [Product.from_item(p, option_groups) for p in d["products"].items()]
-        popular_products = [product for product in products if product.id in d["popularProductIds"]]
+        popular_products = [
+            product for product in products if product.id in d["popularProductIds"]
+        ]
 
         return cls(
             d["currency"],
@@ -841,7 +867,7 @@ class PaymentFee:
             d["value"],
             d["minValue"],
             d["maxValue"],
-            ShippingType.from_key(d["shippingType"])
+            ShippingType.from_key(d["shippingType"]),
         )
 
 
@@ -852,9 +878,7 @@ class Message:
 
     @classmethod
     def from_item(cls, item: Tuple[str, list[str]]) -> Self:
-        return cls(
-            *item
-        )
+        return cls(*item)
 
 
 @dataclass
@@ -928,7 +952,9 @@ class Restaurant:
     @classmethod
     def from_dict(cls, d: dict, list_item: RestaurantListItem) -> Self:
         times = d.get("delivery", {})["times"]
-        delivery_timeframes = [DeliveryTimeframesDay.from_item(item) for item in times.items()]
+        delivery_timeframes = [
+            DeliveryTimeframesDay.from_item(item) for item in times.items()
+        ]
         return cls(
             delivery_timeframes,
             list_item,
@@ -950,20 +976,24 @@ class Restaurant:
             d["restaurantPhoneNumber"],
             [Indicator.from_key(i) for i in d["indicators"]],
             Payment.from_dict(d["payment"]),
-            ImageRatio.from_dict(d["imageRatio"])
+            ImageRatio.from_dict(d["imageRatio"]),
         )
 
     @classmethod
-    async def from_list_item(cls, list_item: RestaurantListItem, *, timeout: int = 15) -> Self:
+    async def from_list_item(
+        cls, list_item: RestaurantListItem, *, timeout: int = 15
+    ) -> Self:
         url = f"https://cw-api.takeaway.com/api/v33/restaurant?slug={list_item.primary_slug}"
         return await cls.from_url(url, list_item, timeout=timeout)
 
     @classmethod
-    async def from_url(cls, url: str, list_item: RestaurantListItem, *, timeout: int = 15) -> Self:
+    async def from_url(
+        cls, url: str, list_item: RestaurantListItem, *, timeout: int = 15
+    ) -> Self:
         logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
         logger.debug(f"retrieve {list_item.brand.name}")
         headers = {
-            'Accept': 'application/json',
+            "Accept": "application/json",
             "X-Language-Code": "de",
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
             "X-Country-Code": "de",
@@ -980,17 +1010,32 @@ class Restaurant:
         return any(now in frame for frame in self.delivery_timeframes)
 
     def telegram_markdown_v2(self) -> str:
-        brand = escape_markdown(self.brand.name + (f" ({self.brand.branch_name})" if self.brand.branch_name else ""))
-        cuisines = escape_markdown(", ".join([cuisine.name() for cuisine in self.cuisine_types if cuisine.name()]))
+        brand = escape_markdown(
+            self.brand.name
+            + (f" ({self.brand.branch_name})" if self.brand.branch_name else "")
+        )
+        cuisines = escape_markdown(
+            ", ".join(
+                [cuisine.name() for cuisine in self.cuisine_types if cuisine.name()]
+            )
+        )
         payment_methods = escape_markdown(", ".join(map(str, self.payment_methods)))
         delivery_info: ShippingInfo = self.delivery_info()
-        category_names = "\n".join(f"    _{escape_markdown(category.name)}_" for category in self.menu.categories if
-                                       "getränke" not in category.name.lower())
+        category_names = "\n".join(
+            f"    _{escape_markdown(category.name)}_"
+            for category in self.menu.categories
+            if "getränke" not in category.name.lower()
+        )
         categories = f"Kategorie:\n{category_names}" if category_names else ""
-        product_names = "\n".join(f"    _{escape_markdown(product.name)}_" for product in self.menu.popular_products)
-        popular_products = f"Populäre Produkte:\n{product_names}" if product_names else ''
+        product_names = "\n".join(
+            f"    _{escape_markdown(product.name)}_"
+            for product in self.menu.popular_products
+        )
+        popular_products = (
+            f"Populäre Produkte:\n{product_names}" if product_names else ""
+        )
 
-        return fr"""*{brand}*
+        return rf"""*{brand}*
 Cuisines: {cuisines if cuisines else "/"}
 Lieferzeit: {delivery_info.telegram_markdown_v2()}
 {escape_markdown(str(self.rating.score))}⭐ \({self.rating.votes} votes\)
