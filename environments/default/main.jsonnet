@@ -27,7 +27,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
           cpu='50m',
           memory='50Mi'
         ) + container.withResourcesLimits(
-          cpu='300m',
+          cpu='1',
           memory='300Mi'
         ) + container.withImagePullPolicy('IfNotPresent'),
       ],
