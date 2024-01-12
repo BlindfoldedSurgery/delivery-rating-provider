@@ -10,7 +10,7 @@ from provider.logger import create_logger
 
 
 def get_env_or_die(key: str) -> str:
-    logger = create_logger(inspect.currentframe().f_code.co_name)
+    logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
     if token := os.getenv(key):
         return token
 
