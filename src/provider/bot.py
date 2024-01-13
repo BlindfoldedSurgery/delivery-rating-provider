@@ -82,10 +82,13 @@ async def command_random[
 
     start = datetime.now()
     url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
+
+    default_filter_kwargs = inspect.getfullargspec(default_filter).kwonlyargs
+    filter_arguments = {k: v for k, v in kwargs.items() if k in default_filter_kwargs}
     restaurants = await get_random_restaurants(
         url,
         # caused by PEP 695 generics are not yet supported
-        filter_fn=lambda r: filter_fn(r, cities_to_ignore=kwargs["cities_to_ignore"]),  # type: ignore
+        filter_fn=lambda r: filter_fn(r, **filter_arguments),  # type: ignore
         count=kwargs["count"],  # type: ignore
     )
     if restaurants:
