@@ -296,7 +296,7 @@ async def command_random[
         kwargs.update(parse_context_args(context.args))
 
     start = datetime.now()
-    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
+    url = get_restaurant_list_url(postal_code=int(kwargs["postal_code"]))  # type: ignore
 
     filter_arguments = filter_keyword_only_arguments_for_function(kwargs)
     restaurants = await get_random_restaurants(
