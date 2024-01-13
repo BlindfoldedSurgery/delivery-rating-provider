@@ -111,8 +111,8 @@ def default_filter(
     *,
     max_order_value: float = 50.0,
     max_duration: int = 90,
-    minimum_rating_score: 2.1,
-    minimum_rating_votes: 1,
+    minimum_rating_score: float = 2.1,
+    minimum_rating_votes: int = 1,
 ) -> bool:
     delivery_info = restaurant.delivery_info()
     min_order_value = delivery_info.min_order_value if delivery_info else None
