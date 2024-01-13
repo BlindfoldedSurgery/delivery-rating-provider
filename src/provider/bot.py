@@ -6,6 +6,7 @@ from typing import Optional, Callable
 
 import httpx
 import telegram.constants
+from aiocache import cached
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -31,7 +32,8 @@ def get_restaurant_list_url(
     )
 
 
-def retrieve_restaurants(_url: str, *, timeout: int) -> list[RestaurantListItem]:
+@cached(ttl=1800)
+async def retrieve_restaurants(_url: str, *, timeout: int) -> list[RestaurantListItem]:
     logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
     logger.debug(f"retrieve restaurant list for {_url}")
     headers = {
@@ -67,7 +69,7 @@ async def get_random_restaurants(
     :return: restaurant from the given list which matches the filters
     """
     log = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    list_items: list[RestaurantListItem] = retrieve_restaurants(url, timeout=timeout)
+    list_items: list[RestaurantListItem] = await retrieve_restaurants(url, timeout=timeout)
 
     # make mypy happy
     chosen_restaurants: list[Restaurant]

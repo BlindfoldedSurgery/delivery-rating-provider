@@ -5,6 +5,7 @@ from typing import Tuple, Self
 from zoneinfo import ZoneInfo
 
 import httpx
+from aiocache import cached
 
 from provider.helper import escape_markdown
 from provider.models.brand import Brand
@@ -157,6 +158,7 @@ class Restaurant:
         return await cls.from_url(url, list_item, timeout=timeout)
 
     @classmethod
+    @cached(ttl=1800)
     async def from_url(
         cls, url: str, list_item: RestaurantListItem, *, timeout: int = 15
     ) -> Self:
