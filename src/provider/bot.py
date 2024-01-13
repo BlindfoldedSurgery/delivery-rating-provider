@@ -187,15 +187,21 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await update.effective_message.reply_text(text="\n".join(message))  # type: ignore
 
 
-def parse_argument_description_from_docstring(docstring: str) -> dict[str, str]:
+def parse_argument_description_from_docstring(docstring: str | None) -> dict[str, str]:
+    if docstring is None:
+        return {}
+
     return {
         match[0]: match[1] for match in re.findall(r":param (\w+): (.+)", docstring)
     }
 
 
-def get_default_values_for_function(function: Callable) -> dict[str, Any]:
+def get_default_values_for_function(function: Callable) -> dict[str, str]:
     argspec = inspect.getfullargspec(function)
     kwonlydefaults = argspec.kwonlydefaults
+    if kwonlydefaults is None:
+        return {}
+
     defaults = {}
 
     for key, default in kwonlydefaults.items():
