@@ -69,7 +69,9 @@ async def get_random_restaurants(
     :return: restaurant from the given list which matches the filters
     """
     log = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    list_items: list[RestaurantListItem] = await retrieve_restaurants(url, timeout=timeout)
+    list_items: list[RestaurantListItem] = await retrieve_restaurants(
+        url, timeout=timeout
+    )
 
     # make mypy happy
     chosen_restaurants: list[Restaurant]
