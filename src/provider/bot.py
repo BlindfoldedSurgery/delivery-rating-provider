@@ -2,7 +2,7 @@ import inspect
 import os
 import re
 from datetime import datetime
-from typing import Callable
+from typing import Callable, Any
 
 import httpx
 import telegram.constants
@@ -18,39 +18,8 @@ from provider.takeaway.models.restaurant_list_item import CuisineType
 DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
 
 
-def default_filter_args():
+def default_filter_args() -> dict[str, Any]:
     return {"postal_code": DEFAULT_POSTAL_CODE, "cities_to_ignore": [], "count": 1}
-
-
-def parse_context_args(args: list[str] | None) -> dict:
-    args = "\n".join(args)
-    kwargs = default_filter_args()
-    kwargs.update(
-        {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
-    )
-
-    kwargs.update(
-        {k.lower(): v.split(",") for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)}
-    )
-    kwargs.update(
-        {
-            k: v[0].lower() in ["yes", "true"]
-            for k, v in kwargs.items()
-            if isinstance(v, list)
-            and len(v) == 1
-            and v[0].lower() in ["yes", "true", "no", "false"]
-        }
-    )
-
-    if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
-        kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
-
-    return kwargs
-
-
-def get_filter_arguments(kwargs: dict) -> dict:
-    _default_filter_kwargs = inspect.getfullargspec(default_filter).kwonlyargs
-    return {k: v for k, v in kwargs.items() if k in _default_filter_kwargs}
 
 
 def default_filter(
@@ -120,6 +89,51 @@ def default_filter(
             pickup_delivery,
         ]
     )
+
+
+def get_filter_arguments(kwargs: dict) -> dict:
+    _default_filter_kwargs = inspect.getfullargspec(default_filter).kwonlyargs
+    return {k: v for k, v in kwargs.items() if k in _default_filter_kwargs}
+
+
+def parse_context_args(_args: list[str] | None) -> dict:
+    if not _args:
+        return {}
+
+    args = "\n".join(_args)
+
+    kwargs: dict[str, Any] = default_filter_args()
+    kwargs.update(
+        {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
+    )
+
+    kwargs.update(
+        {k.lower(): v.split(",") for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)}
+    )
+    boolean_string_values = ["yes", "true", "no", "false"]
+    kwargs.update(
+        {
+            k: v[0].lower() in ["yes", "true"]
+            for k, v in kwargs.items()
+            if isinstance(v, list)
+            and len(v) == 1
+            and v[0].lower() in boolean_string_values
+        }
+    )
+    argspec = inspect.getfullargspec(default_filter)
+    kwonly_annotations = {
+        k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
+    }
+    for keyword, keyword_type in kwonly_annotations.items():
+        if value := kwargs.get(keyword) is not None:
+            if keyword_type == bool:
+                if value not in boolean_string_values:
+                    raise ValueError(f"invalid boolean input for {keyword}")
+
+    if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
+        kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
+
+    return kwargs
 
 
 async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -259,6 +273,8 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message += f"\n{str(e)}"
     except telegram.error.BadRequest as e:
         message = f"failed to send reply: {str(e)}"
+    except ValueError as e:
+        message = str(e)
 
     message = escape_markdown(message)
 
