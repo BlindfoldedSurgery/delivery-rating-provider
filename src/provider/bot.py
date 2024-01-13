@@ -15,7 +15,7 @@ from provider.takeaway import get_random_restaurants, get_restaurant_list_url
 from provider.takeaway.models import Restaurant, SupportOption
 from provider.takeaway.models.restaurant_list_item import CuisineType
 
-DEFAULT_POSTAL_CODE = os.getenv("DEFAULT_POSTAL_CODE", "64293")
+DEFAULT_POSTAL_CODE = [os.getenv("DEFAULT_POSTAL_CODE", "64293")]
 
 
 def default_filter_args() -> dict[str, Any]:
@@ -141,7 +141,6 @@ def is_truthy_boolean_string(value: str) -> bool:
 
 def validate_keyword_types(kwargs: dict, *, function: Callable = default_filter) -> None:
     """
-
     :raises: ValueError when any keyword argument does not match the excpected type
     """
     # validate keyword types (for bool/float/int)
@@ -203,7 +202,7 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     kwargs = default_filter_args()
     kwargs.update(parse_context_args(context.args))
     kwargs.update({"count": 10000})
-    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
+    url = get_restaurant_list_url(postal_code=kwargs["postal_code"][0])  # type: ignore
 
     filter_arguments = filter_keyword_only_arguments_for_function(kwargs)
     restaurants = await get_random_restaurants(
@@ -296,7 +295,7 @@ async def command_random[
         kwargs.update(parse_context_args(context.args))
 
     start = datetime.now()
-    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
+    url = get_restaurant_list_url(postal_code=kwargs["postal_code"][0])  # type: ignore
 
     filter_arguments = filter_keyword_only_arguments_for_function(kwargs)
     restaurants = await get_random_restaurants(
