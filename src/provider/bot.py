@@ -108,16 +108,18 @@ def parse_context_args(_args: list[str] | None) -> dict:
     )
 
     kwargs.update(
-        {k.lower(): v.split(",") for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)}
+        {
+            k.lower(): v.lower() in ["yes", "true"]
+            for k, v in re.findall(r"(\w+):(no|yes|true|false)", args)
+            if k not in kwargs.keys()
+        }
     )
-    boolean_string_values = ["yes", "true", "no", "false"]
+
     kwargs.update(
         {
-            k: v[0].lower() in ["yes", "true"]
-            for k, v in kwargs.items()
-            if isinstance(v, list)
-            and len(v) == 1
-            and v[0].lower() in boolean_string_values
+            k.lower(): v.split(",")
+            for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)
+            if k not in kwargs.keys()
         }
     )
     argspec = inspect.getfullargspec(default_filter)
@@ -125,10 +127,15 @@ def parse_context_args(_args: list[str] | None) -> dict:
         k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
     }
     for keyword, keyword_type in kwonly_annotations.items():
-        if value := kwargs.get(keyword) is not None:
-            if keyword_type == bool:
-                if value not in boolean_string_values:
-                    raise ValueError(f"invalid boolean input for {keyword}")
+        if value := kwargs.get(keyword):
+            if value is None:
+                continue
+            elif keyword_type == bool:
+                if not isinstance(value, bool):
+                    raise ValueError(f"invalid boolean value for {keyword}")
+            elif keyword_type == int or keyword_type == float:
+                if not (isinstance(value, int) or isinstance(value, float)):
+                    raise ValueError(f"invalid int/float input for {keyword}")
 
     if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
         kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
