@@ -12,7 +12,7 @@ from telegram.ext import ContextTypes
 from provider.helper import escape_markdown
 from provider.logger import create_logger
 from provider.takeaway import get_random_restaurants, get_restaurant_list_url
-from provider.takeaway.models import Restaurant
+from provider.takeaway.models import Restaurant, SupportOption
 from provider.takeaway.models.restaurant_list_item import CuisineType
 
 DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
@@ -55,6 +55,7 @@ def default_filter(
     is_open_in_minutes: int = 0,
     cuisines_to_include: list[str] | None = None,
     cuisines_to_exclude: list[str] | None = None,
+    allow_pickup: bool = False,
 ) -> bool:
     if cities_to_ignore is None:
         cities_to_ignore = []
@@ -92,6 +93,10 @@ def default_filter(
         ]
     )
 
+    pickup_delivery = (
+        allow_pickup and restaurant.supports(SupportOption.Pickup)
+    ) or delivery_info is not None
+
     return all(
         [
             restaurant.is_open(is_open_in_minutes),
@@ -103,6 +108,7 @@ def default_filter(
             not is_city_to_ignore,
             has_cuisine_to_include,
             not has_cuisine_to_exclude,
+            pickup_delivery,
         ]
     )
 

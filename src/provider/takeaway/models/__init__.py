@@ -108,7 +108,7 @@ class Restaurant:
     exceptional_status: None  # no idea
     menu: Menu
     pickup: Pickup
-    supports: list[SupportOption]
+    support_options: list[SupportOption]
     primary_slug: str
     minisite_url: str | None
     restaurant_hygiene_rating_id: str
@@ -119,6 +119,9 @@ class Restaurant:
 
     def __getattr__(self, item: str):
         return getattr(self._list_item, item)
+
+    def supports(self, support_option: SupportOption) -> bool:
+        return support_option in self.support_options
 
     @classmethod
     def from_dict(cls, d: dict, list_item: RestaurantListItem) -> Self:

@@ -19,6 +19,9 @@ class IdEnum(Enum):
     def from_key(cls, s: str) -> Self:
         return cls(to_pascal_case(s))
 
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 class ShippingType(IdEnum):
     DELIVERY = auto()
