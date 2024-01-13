@@ -187,7 +187,7 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await update.effective_message.reply_text(text="\n".join(message))  # type: ignore
 
 
-def parse_argument_description_from_docstring(docstring: str | None) -> dict[str, str]:
+def parse_parameter_description_from_docstring(docstring: str | None) -> dict[str, str]:
     if docstring is None:
         return {}
 
@@ -216,7 +216,7 @@ def get_default_values_for_function(function: Callable) -> dict[str, str]:
 async def command_get_available_filter_arguments(
     update: Update, _: ContextTypes.DEFAULT_TYPE
 ):
-    param_description = parse_argument_description_from_docstring(
+    param_description = parse_parameter_description_from_docstring(
         default_filter.__doc__
     )
     defaults = get_default_values_for_function(default_filter)
