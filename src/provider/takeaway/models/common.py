@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Self, Tuple
 
@@ -63,14 +63,16 @@ class DeliveryTimeframe:
             d["formattedEnd"],
         )
 
-    def is_open(self, item: datetime) -> bool:
+    def is_open(self, item: datetime, is_open_in_minutes: int) -> bool:
         offset_day = 0
         hours_diff = self.end // 60
 
         if hours_diff > 24:
             # we're gonna ignore seconds here (not even supported by takeaway)
             rem = int(abs(math.remainder(self.end, 60)))
-            item = item.replace(day=item.day - 1, hour=(hours_diff - 24), minute=rem)
+            item = item.replace(
+                day=item.day - 1, hour=(hours_diff - 24), minute=rem
+            ) + timedelta(minutes=is_open_in_minutes)
             offset_day = 24
 
         offset = ((offset_day + item.hour) * 60) + item.minute
@@ -90,8 +92,8 @@ class DeliveryTimeframesDay:
             Weekday(int(item[0])),
         )
 
-    def is_open(self, item: datetime) -> bool:
-        return any(frame.is_open(item) for frame in self.timeframes)
+    def is_open(self, item: datetime, is_open_in_minutes: int) -> bool:
+        return any(frame.is_open(item, is_open_in_minutes) for frame in self.timeframes)
 
 
 class PaymentMethod(IdEnum):

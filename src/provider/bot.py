@@ -25,6 +25,7 @@ def default_filter(
     minimum_rating_score: float = 2.1,
     minimum_rating_votes: int = 1,
     cities_to_ignore: list[str] | None = None,
+    is_open_in_minutes: int = 0,
 ) -> bool:
     if cities_to_ignore is None:
         cities_to_ignore = []
@@ -42,7 +43,7 @@ def default_filter(
     )
     return all(
         [
-            restaurant.is_open(),
+            restaurant.is_open(is_open_in_minutes),
             restaurant.offers_delivery(),
             restaurant.rating.votes >= minimum_rating_votes,
             restaurant.rating.score >= minimum_rating_score,

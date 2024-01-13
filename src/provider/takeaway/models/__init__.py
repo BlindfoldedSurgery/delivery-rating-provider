@@ -177,9 +177,11 @@ class Restaurant:
 
         return cls.from_dict(value, list_item)
 
-    def is_open(self) -> bool:
+    def is_open(self, is_open_in_minutes: int) -> bool:
         now = datetime.now().astimezone(tz=ZoneInfo("Europe/Berlin"))
-        return any(frame.is_open(now) for frame in self.delivery_timeframes)
+        return any(
+            frame.is_open(now, is_open_in_minutes) for frame in self.delivery_timeframes
+        )
 
     def telegram_markdown_v2(self) -> str:
         brand = escape_markdown(
