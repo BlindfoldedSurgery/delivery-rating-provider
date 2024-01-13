@@ -152,20 +152,37 @@ class Restaurant:
         )
 
     @classmethod
-    async def from_list_item(cls, list_item: RestaurantListItem, *, timeout: int = 15) -> Self:
+    async def from_list_item(
+        cls,
+        list_item: RestaurantListItem,
+        *,
+        timeout: int = 15,
+        language_code: str = "de",
+        country_code: str = "de",
+    ) -> Self:
         url = f"https://cw-api.takeaway.com/api/v33/restaurant?slug={list_item.primary_slug}"
-        return await cls.from_url(url, list_item, timeout=timeout)
+        return await cls.from_url(
+            url, list_item, timeout=timeout, language_code=language_code, country_code=country_code
+        )
 
     @classmethod
     @cached(ttl=1800)
-    async def from_url(cls, url: str, list_item: RestaurantListItem, *, timeout: int = 15) -> Self:
+    async def from_url(
+        cls,
+        url: str,
+        list_item: RestaurantListItem,
+        *,
+        timeout: int = 15,
+        language_code: str = "de",
+        country_code: str = "de",
+    ) -> Self:
         logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
         logger.debug(f"retrieve {list_item.brand.name}")
         headers = {
             "Accept": "application/json",
-            "X-Language-Code": "de",
+            "X-Language-Code": language_code,
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
-            "X-Country-Code": "de",
+            "X-Country-Code": country_code,
         }
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, timeout=timeout)

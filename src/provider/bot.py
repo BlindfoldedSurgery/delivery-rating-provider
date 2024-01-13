@@ -19,7 +19,13 @@ DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
 
 
 def default_filter_args() -> dict[str, Any]:
-    return {"postal_code": DEFAULT_POSTAL_CODE, "cities_to_ignore": [], "count": 1}
+    return {
+        "postal_code": DEFAULT_POSTAL_CODE,
+        "cities_to_ignore": [],
+        "count": 1,
+        "language_code": "de",
+        "country_code": "de",
+    }
 
 
 def filter_cuisines(
@@ -205,6 +211,8 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # caused by PEP 695 generics are not yet supported
         filter_fn=lambda r: default_filter(r, **filter_arguments),  # type: ignore
         count=kwargs["count"],  # type: ignore
+        language_code=kwargs["language_code"],
+        country_code=kwargs["country_code"],
     )
 
     cuisine_types = set()
@@ -296,6 +304,8 @@ async def command_random[
         # caused by PEP 695 generics are not yet supported
         filter_fn=lambda r: filter_fn(r, **filter_arguments),  # type: ignore
         count=kwargs["count"],  # type: ignore
+        language_code=kwargs["language_code"],
+        country_code=kwargs["country_code"],
     )
     if restaurants:
         logger.debug(f"{(datetime.now() - start).seconds}s to retrieve filtered restaurant list")

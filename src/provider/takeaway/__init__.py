@@ -28,14 +28,16 @@ def get_restaurant_list_url(
 
 
 @cached(ttl=1800)
-async def retrieve_restaurants(_url: str, *, timeout: int) -> list[RestaurantListItem]:
+async def retrieve_restaurants(
+    _url: str, *, timeout: int, language_code: str = "de", country_code: str = "de"
+) -> list[RestaurantListItem]:
     logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
     logger.debug(f"retrieve restaurant list for {_url}")
     headers = {
         "Accept": "application/json",
-        "X-Language-Code": "de",
+        "X-Language-Code": language_code,
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
-        "X-Country-Code": "de",
+        "X-Country-Code": country_code,
     }
 
     response = httpx.get(_url, headers=headers, timeout=timeout)
@@ -53,6 +55,8 @@ async def get_random_restaurants(
     count: int = 1,
     filter_fn: Optional[Callable[[Restaurant], bool]] = None,
     timeout: int = 15,
+    language_code: str = "de",
+    country_code: str = "de",
 ) -> list[Restaurant]:
     """
     :raises IndexError: if no restaurants have been
@@ -60,16 +64,23 @@ async def get_random_restaurants(
     :param count: number of restauants to return
     :param filter_fn: filter restaurants (e.g. Restaurant#is_open)
     :param timeout: timeout for each restaurant page and the listing page
+    :param country_code: alpha-2 country code for the `X-Country-Code` header
+    :param language_code: alpha-2 language code for the `X-Language-Code` header
     :return: restaurant from the given list which matches the filters
     """
     log = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    list_items: list[RestaurantListItem] = await retrieve_restaurants(url, timeout=timeout)
+    list_items: list[RestaurantListItem] = await retrieve_restaurants(
+        url, timeout=timeout, language_code=language_code, country_code=country_code
+    )
 
     # make mypy happy
     chosen_restaurants: list[Restaurant]
     if filter_fn is not None:
         restaurants_a = (
-            Restaurant.from_list_item(list_item, timeout=timeout) for list_item in list_items
+            Restaurant.from_list_item(
+                list_item, timeout=timeout, language_code=language_code, country_code=country_code
+            )
+            for list_item in list_items
         )
         restaurants = await asyncio.gather(*restaurants_a, return_exceptions=True)
 
