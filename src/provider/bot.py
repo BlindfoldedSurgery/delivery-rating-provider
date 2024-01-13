@@ -35,6 +35,20 @@ def default_filter(
     cuisines_to_exclude: list[str] | None = None,
     allow_pickup: bool = False,
 ) -> bool:
+    """
+
+    :param restaurant:
+    :param max_order_value: minimum order value must be below (or equal to) this threshold
+    :param max_duration: maximum delivery duration in minutes
+    :param minimum_rating_score: minimum rating score (0.0 - 5.0)
+    :param minimum_rating_votes: minimum votes for the restaurant
+    :param cities_to_ignore: list of cities to ignore (default is 'frankfurt' for the postal code 64293)
+    :param is_open_in_minutes: include restaurants which open x minutes from now
+    :param cuisines_to_include: list of cuisines which a restaurant must include
+    :param cuisines_to_exclude: list of cuisines which must not appear in restaurants choices
+    :param allow_pickup: by default only restaurants which support delivery are filtered
+    :return: whether the restaurant fulfills all the given criteria
+    """
     if cities_to_ignore is None:
         cities_to_ignore = []
     if cuisines_to_include is None:
@@ -53,6 +67,7 @@ def default_filter(
             if to_ignore.lower() in restaurant.location.city.lower()
         ]
     )
+
     cuisines_to_exclude_types = [CuisineType.from_str(c) for c in cuisines_to_exclude]
     has_cuisine_to_exclude = any(
         [
@@ -61,8 +76,8 @@ def default_filter(
             if to_ignore in restaurant.cuisine_types
         ]
     )
-    cuisines_to_include_types = [CuisineType.from_str(c) for c in cuisines_to_include]
 
+    cuisines_to_include_types = [CuisineType.from_str(c) for c in cuisines_to_include]
     has_cuisine_to_include = len(cuisines_to_include) == 0 or any(
         [
             True
@@ -172,9 +187,33 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return await update.effective_message.reply_text(text="\n".join(message))  # type: ignore
 
 
+def parse_argument_description_from_docstring(docstring: str) -> dict[str, str]:
+    return {
+        match[0]: match[1] for match in re.findall(r":param (\w+): (.+)", docstring)
+    }
+
+
+def get_default_values_for_function(function: Callable) -> dict[str, Any]:
+    argspec = inspect.getfullargspec(function)
+    kwonlydefaults = argspec.kwonlydefaults
+    defaults = {}
+
+    for key, default in kwonlydefaults.items():
+        if default is None:
+            defaults[key] = "`empty`"
+        else:
+            defaults[key] = f"`{default}`".lower()
+
+    return defaults
+
+
 async def command_get_available_filter_arguments(
     update: Update, _: ContextTypes.DEFAULT_TYPE
 ):
+    param_description = parse_argument_description_from_docstring(
+        default_filter.__doc__
+    )
+    defaults = get_default_values_for_function(default_filter)
     argspec = inspect.getfullargspec(default_filter)
     kwonly_annotations = {
         k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
@@ -182,33 +221,16 @@ async def command_get_available_filter_arguments(
     message = [
         "filter args can be given as followed: `{key}:{value}`\n"
         r"e\.g\.: `minimum_rating_score:3\.0`",
+        "allowed values for booleans: no, false, yes, true",
+        r"lists \(default: empty\) can be a comma seperated list \(e\.g\. a,b,c\)"
+        r"allowed characters are: a\-z, A\-Z, \-, \_",
     ]
     for keyword, keyword_type in kwonly_annotations.items():
-        if keyword_type == int or keyword_type == float:
-            message.append(
-                f"`{escape_markdown(keyword)}`"
-                + escape_markdown(": a number (e.g. 1, 1.0)")
-            )
-        elif (
-            str(keyword_type) == "list[str]" or str(keyword_type) == "list[str] | None"
-        ):
-            message.append(
-                f"`{escape_markdown(keyword)}`"
-                + escape_markdown(
-                    ": a comma separated string (only a-z, underscores and dashes allowed, e.g. a-d, b)"
-                )
-            )
-        elif keyword_type == bool:
-            message.append(
-                f"`{escape_markdown(keyword)}`"
-                + escape_markdown(
-                    ": a boolean, true, yes, no, false are accepted values"
-                )
-            )
-        else:
-            message.append(
-                f"`{escape_markdown(keyword)}` is of type *{escape_markdown(str(keyword_type))}*"
-            )
+        message.append(
+            f"`{escape_markdown(keyword)}`: "
+            + escape_markdown(param_description[keyword])
+            + rf" \| default: {defaults[keyword]}"
+        )
 
     return await update.effective_message.reply_text(  # type: ignore
         text="\n\n".join(message), parse_mode=telegram.constants.ParseMode.MARKDOWN_V2
