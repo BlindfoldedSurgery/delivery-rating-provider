@@ -43,8 +43,7 @@ async def retrieve_restaurants(_url: str, *, timeout: int) -> list[RestaurantLis
     restaurants = response.json().get("restaurants", [])
 
     return [
-        RestaurantListItem.from_dict(restaurants[restaurant_key])
-        for restaurant_key in restaurants
+        RestaurantListItem.from_dict(restaurants[restaurant_key]) for restaurant_key in restaurants
     ]
 
 
@@ -64,16 +63,13 @@ async def get_random_restaurants(
     :return: restaurant from the given list which matches the filters
     """
     log = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    list_items: list[RestaurantListItem] = await retrieve_restaurants(
-        url, timeout=timeout
-    )
+    list_items: list[RestaurantListItem] = await retrieve_restaurants(url, timeout=timeout)
 
     # make mypy happy
     chosen_restaurants: list[Restaurant]
     if filter_fn is not None:
         restaurants_a = (
-            Restaurant.from_list_item(list_item, timeout=timeout)
-            for list_item in list_items
+            Restaurant.from_list_item(list_item, timeout=timeout) for list_item in list_items
         )
         restaurants = await asyncio.gather(*restaurants_a, return_exceptions=True)
 
@@ -84,9 +80,7 @@ async def get_random_restaurants(
         ]
 
         for error in [
-            restaurant
-            for restaurant in restaurants
-            if isinstance(restaurant, BaseException)
+            restaurant for restaurant in restaurants if isinstance(restaurant, BaseException)
         ]:
             log.exception(repr(error))
 

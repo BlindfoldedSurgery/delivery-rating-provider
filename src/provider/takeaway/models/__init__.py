@@ -126,9 +126,7 @@ class Restaurant:
     @classmethod
     def from_dict(cls, d: dict, list_item: RestaurantListItem) -> Self:
         times = d.get("delivery", {})["times"]
-        delivery_timeframes = [
-            DeliveryTimeframesDay.from_item(item) for item in times.items()
-        ]
+        delivery_timeframes = [DeliveryTimeframesDay.from_item(item) for item in times.items()]
         return cls(
             delivery_timeframes,
             list_item,
@@ -154,17 +152,13 @@ class Restaurant:
         )
 
     @classmethod
-    async def from_list_item(
-        cls, list_item: RestaurantListItem, *, timeout: int = 15
-    ) -> Self:
+    async def from_list_item(cls, list_item: RestaurantListItem, *, timeout: int = 15) -> Self:
         url = f"https://cw-api.takeaway.com/api/v33/restaurant?slug={list_item.primary_slug}"
         return await cls.from_url(url, list_item, timeout=timeout)
 
     @classmethod
     @cached(ttl=1800)
-    async def from_url(
-        cls, url: str, list_item: RestaurantListItem, *, timeout: int = 15
-    ) -> Self:
+    async def from_url(cls, url: str, list_item: RestaurantListItem, *, timeout: int = 15) -> Self:
         logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
         logger.debug(f"retrieve {list_item.brand.name}")
         headers = {
@@ -182,19 +176,14 @@ class Restaurant:
 
     def is_open(self, is_open_in_minutes: int) -> bool:
         now = datetime.now().astimezone(tz=ZoneInfo("Europe/Berlin"))
-        return any(
-            frame.is_open(now, is_open_in_minutes) for frame in self.delivery_timeframes
-        )
+        return any(frame.is_open(now, is_open_in_minutes) for frame in self.delivery_timeframes)
 
     def telegram_markdown_v2(self) -> str:
         brand = escape_markdown(
-            self.brand.name
-            + (f" ({self.brand.branch_name})" if self.brand.branch_name else "")
+            self.brand.name + (f" ({self.brand.branch_name})" if self.brand.branch_name else "")
         )
         cuisines = escape_markdown(
-            ", ".join(
-                [cuisine.name() for cuisine in self.cuisine_types if cuisine.name()]
-            )
+            ", ".join([cuisine.name() for cuisine in self.cuisine_types if cuisine.name()])
         )
         payment_methods = escape_markdown(", ".join(map(str, self.payment_methods)))
         delivery_info: ShippingInfo = self.delivery_info()
@@ -205,12 +194,9 @@ class Restaurant:
         )
         categories = f"Kategorien:\n{category_names}" if category_names else ""
         product_names = "\n".join(
-            f"    _{escape_markdown(product.name)}_"
-            for product in self.menu.popular_products
+            f"    _{escape_markdown(product.name)}_" for product in self.menu.popular_products
         )
-        popular_products = (
-            f"Populäre Produkte:\n{product_names}" if product_names else ""
-        )
+        popular_products = f"Populäre Produkte:\n{product_names}" if product_names else ""
 
         return rf"""*{brand}*
 Cuisines: {cuisines if cuisines else "/"}

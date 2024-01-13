@@ -10,9 +10,7 @@ from provider.helper import escape_markdown, to_pascal_case
 
 class IdEnum(Enum):
     @staticmethod
-    def _generate_next_value_(
-        name: str, start: int, count: int, last_values: list
-    ) -> str:
+    def _generate_next_value_(name: str, start: int, count: int, last_values: list) -> str:
         return name
 
     @classmethod
@@ -30,9 +28,7 @@ class ShippingType(IdEnum):
 
 class Weekday(Enum):
     @staticmethod
-    def _generate_next_value_(
-        name: str, start: int, count: int, last_values: list
-    ) -> int:
+    def _generate_next_value_(name: str, start: int, count: int, last_values: list) -> int:
         return len(last_values)
 
     Sunday = auto()
@@ -73,9 +69,9 @@ class DeliveryTimeframe:
         if hours_diff > 24:
             # we're gonna ignore seconds here (not even supported by takeaway)
             rem = int(abs(math.remainder(self.end, 60)))
-            item = item.replace(
-                day=item.day - 1, hour=(hours_diff - 24), minute=rem
-            ) + timedelta(minutes=is_open_in_minutes)
+            item = item.replace(day=item.day - 1, hour=(hours_diff - 24), minute=rem) + timedelta(
+                minutes=is_open_in_minutes
+            )
             offset_day = 24
 
         offset = ((offset_day + item.hour) * 60) + item.minute
@@ -159,9 +155,7 @@ class Location:
 
     def link(self) -> str:
         # see https://developers.google.com/maps/documentation/urls/get-started#search-examples
-        return (
-            f"https://www.google.com/maps/search/?api=1&query={self.lat}%2C{self.lon}"
-        )
+        return f"https://www.google.com/maps/search/?api=1&query={self.lat}%2C{self.lon}"
 
     def _street_address(self) -> str:
         if self.street_address:
@@ -233,9 +227,7 @@ class ShippingInfo:
         delivery_fee_default = (
             float(d["deliveryFeeDefault"]) / 100 if "deliveryFeeDefault" in d else None
         )
-        min_order_value = (
-            float(d["minOrderValue"]) / 100 if "minOrderValue" in d else None
-        )
+        min_order_value = float(d["minOrderValue"]) / 100 if "minOrderValue" in d else None
 
         return cls(
             _type,

@@ -71,9 +71,7 @@ class Option:
             int(d["pricePerUnitPickup"]) if d["pricePerUnitPickup"] else None,
             int(d["pricePerUnitDelivery"]) if d["pricePerUnitDelivery"] else None,
             float(d["alcoholVolume"].replace(",", ".")) if d["alcoholVolume"] else None,
-            float(d["caffeineAmount"].replace(",", "."))
-            if d["caffeineAmount"]
-            else None,
+            float(d["caffeineAmount"].replace(",", ".")) if d["caffeineAmount"] else None,
             d["isSoldOut"],
             d["isExcludedFromMov"],
         )
@@ -129,11 +127,7 @@ class Variant:
         return cls(
             d["id"],
             d["name"],
-            [
-                option_group
-                for option_group in option_groups
-                if option_group in d["optionGroupIds"]
-            ],
+            [option_group for option_group in option_groups if option_group in d["optionGroupIds"]],
             [ShippingType.from_key(s) for s in d["shippingTypes"]],
             OptionPrices.from_dict(d["prices"]),
             OptionMetric.from_dict(d["metric"]),
@@ -141,9 +135,7 @@ class Variant:
             int(d["pricePerUnitPickup"]) if d["pricePerUnitPickup"] else None,
             int(d["pricePerUnitDelivery"]) if d["pricePerUnitDelivery"] else None,
             float(d["alcoholVolume"].replace(",", ".")) if d["alcoholVolume"] else None,
-            float(d["caffeineAmount"].replace(",", "."))
-            if d["caffeineAmount"]
-            else None,
+            float(d["caffeineAmount"].replace(",", ".")) if d["caffeineAmount"] else None,
             d["isSoldOut"],
             d["isExcludedFromMov"],
         )
@@ -158,9 +150,7 @@ class Product:
     variants: list[Variant]
 
     @classmethod
-    def from_item(
-        cls, item: Tuple[str, dict], option_groups: list[OptionGroup]
-    ) -> Self:
+    def from_item(cls, item: Tuple[str, dict], option_groups: list[OptionGroup]) -> Self:
         _id, d = item
         return cls(
             _id,
@@ -187,9 +177,7 @@ class Category:
         time_restrictions = []
         for time_restriction in d.get("timeRestrictions", {}).items():
             try:
-                time_restrictions.append(
-                    DeliveryTimeframesDay.from_item(time_restriction)
-                )
+                time_restrictions.append(DeliveryTimeframesDay.from_item(time_restriction))
             except IndexError:
                 pass
 
@@ -280,13 +268,9 @@ class Menu:
     @classmethod
     def from_dict(cls, d: dict) -> Self:
         options = [Option.from_item(o) for o in d["options"].items()]
-        option_groups = [
-            OptionGroup.from_item(o, options) for o in d["optionGroups"].items()
-        ]
+        option_groups = [OptionGroup.from_item(o, options) for o in d["optionGroups"].items()]
         products = [Product.from_item(p, option_groups) for p in d["products"].items()]
-        popular_products = [
-            product for product in products if product.id in d["popularProductIds"]
-        ]
+        popular_products = [product for product in products if product.id in d["popularProductIds"]]
 
         return cls(
             d["currency"],

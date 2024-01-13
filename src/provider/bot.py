@@ -33,13 +33,7 @@ def filter_cuisines(
             return True
 
     cuisine_types = [CuisineType.from_str(c) for c in cuisines]
-    return any(
-        [
-            True
-            for cuisine_type in cuisine_types
-            if cuisine_type in restaurant.cuisine_types
-        ]
-    )
+    return any([True for cuisine_type in cuisine_types if cuisine_type in restaurant.cuisine_types])
 
 
 def filter_city(restaurant: Restaurant, cities_to_ignore: list[str] | None) -> bool:
@@ -88,12 +82,8 @@ def default_filter(
 
     is_city_to_ignore = filter_city(restaurant, cities_to_ignore)
 
-    has_cuisine_to_exclude = filter_cuisines(
-        restaurant, cuisines_to_exclude, exclude=True
-    )
-    has_cuisine_to_include = filter_cuisines(
-        restaurant, cuisines_to_include, exclude=False
-    )
+    has_cuisine_to_exclude = filter_cuisines(restaurant, cuisines_to_exclude, exclude=True)
+    has_cuisine_to_include = filter_cuisines(restaurant, cuisines_to_include, exclude=False)
 
     pickup_delivery = (
         allow_pickup and restaurant.supports(SupportOption.Pickup)
@@ -129,9 +119,7 @@ def parse_context_args(_args: list[str] | None) -> dict:
     kwargs: dict[str, Any] = default_filter_args()
 
     # int/float
-    kwargs.update(
-        {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
-    )
+    kwargs.update({k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)})
 
     # bool
     kwargs.update(
@@ -153,9 +141,7 @@ def parse_context_args(_args: list[str] | None) -> dict:
 
     # validate keyword types (for bool/float/int)
     argspec = inspect.getfullargspec(default_filter)
-    kwonly_annotations = {
-        k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
-    }
+    kwonly_annotations = {k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs}
     for keyword, keyword_type in kwonly_annotations.items():
         if value := kwargs.get(keyword):
             if value is None:
@@ -200,9 +186,7 @@ def parse_parameter_description_from_docstring(docstring: str | None) -> dict[st
     if docstring is None:
         return {}
 
-    return {
-        match[0]: match[1] for match in re.findall(r":param (\w+): (.+)", docstring)
-    }
+    return {match[0]: match[1] for match in re.findall(r":param (\w+): (.+)", docstring)}
 
 
 def get_default_values_for_function(function: Callable) -> dict[str, str]:
@@ -222,17 +206,11 @@ def get_default_values_for_function(function: Callable) -> dict[str, str]:
     return defaults
 
 
-async def command_get_available_filter_arguments(
-    update: Update, _: ContextTypes.DEFAULT_TYPE
-):
-    param_description = parse_parameter_description_from_docstring(
-        default_filter.__doc__
-    )
+async def command_get_available_filter_arguments(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    param_description = parse_parameter_description_from_docstring(default_filter.__doc__)
     defaults = get_default_values_for_function(default_filter)
     argspec = inspect.getfullargspec(default_filter)
-    kwonly_annotations = {
-        k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
-    }
+    kwonly_annotations = {k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs}
     message = [
         "filter args can be given as followed: `{key}:{value}`\n"
         r"e\.g\.: `minimum_rating_score:3\.0`",
@@ -286,9 +264,7 @@ async def command_random[
         count=kwargs["count"],  # type: ignore
     )
     if restaurants:
-        logger.debug(
-            f"{(datetime.now() - start).seconds}s to retrieve filtered restaurant list"
-        )
+        logger.debug(f"{(datetime.now() - start).seconds}s to retrieve filtered restaurant list")
         message = f"\n{escape_markdown('=================================')}\n\n".join(
             [restaurant.telegram_markdown_v2() for restaurant in restaurants]
         )
@@ -296,7 +272,8 @@ async def command_random[
         message = "couldn't find any restaurant for the given filter"
 
     # mypy complains that `effective_message` might be None, this cannot happen here since
-    # we're only calling this method from the `CommandHandler` which forces `effective_message` to be not `None`
+    # we're only calling this method from the `CommandHandler` which forces
+    # `effective_message` to be not `None`
     return await update.effective_message.reply_text(  # type: ignore
         message,
         disable_web_page_preview=True,  # type: ignore
