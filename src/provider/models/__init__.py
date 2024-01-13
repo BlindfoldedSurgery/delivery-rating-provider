@@ -6,9 +6,9 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from provider.brand import Brand
-from provider.colophone import Colophon
-from provider.common import (
+from provider.models.brand import Brand
+from provider.models.colophone import Colophon
+from provider.models.common import (
     escape_markdown,
     DeliveryTimeframesDay,
     Rating,
@@ -18,9 +18,9 @@ from provider.common import (
     ShippingInfo,
 )
 from provider.logger import create_logger
-from provider.menu import Menu
-from provider.payment import Payment
-from provider.restaurant_list_item import RestaurantListItem
+from provider.models.menu import Menu
+from provider.models.payment import Payment
+from provider.models.restaurant_list_item import RestaurantListItem
 
 
 @dataclass

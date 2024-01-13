@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Self, Tuple
 
-from provider.common import ShippingType, PaymentMethod
+from provider.models.common import ShippingType, PaymentMethod
 
 
 @dataclass

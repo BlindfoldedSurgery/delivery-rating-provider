@@ -2,8 +2,8 @@ import re
 from dataclasses import dataclass
 from typing import Self
 
-from provider.brand import BrandItem
-from provider.common import (
+from provider.models.brand import BrandItem
+from provider.models.common import (
     Indicator,
     Rating,
     Location,
