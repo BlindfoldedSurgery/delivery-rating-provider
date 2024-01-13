@@ -14,7 +14,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
   local envFromSource = k.core.v1.envFromSource,
 
   bot: {
-    deployment: sts.new(
+    statefulset: sts.new(
       name=$.config.name,
       replicas=1,
       containers=[
