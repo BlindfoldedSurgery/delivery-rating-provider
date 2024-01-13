@@ -32,6 +32,15 @@ def parse_context_args(args: list[str] | None) -> dict:
     kwargs.update(
         {k.lower(): v.split(",") for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)}
     )
+    kwargs.update(
+        {
+            k: v[0].lower() in ["yes", "true"]
+            for k, v in kwargs.items()
+            if isinstance(v, list)
+            and len(v) == 1
+            and v[0].lower() in ["yes", "true", "no", "false"]
+        }
+    )
 
     if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
         kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
@@ -125,10 +134,9 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
         filter_fn=lambda r: default_filter(r, **filter_arguments),  # type: ignore
         count=kwargs["count"],  # type: ignore
     )
-    print(len(restaurants))
+
     cuisine_types = set()
     for restaurant in restaurants:
-        print(*restaurant.cuisine_types, sep="\n")
         cuisine_types.update(restaurant.cuisine_types)
 
     cuisine_names = [ct.name() for ct in cuisine_types if ct]
@@ -160,6 +168,13 @@ async def command_get_available_filter_arguments(
                 f"`{escape_markdown(keyword)}`"
                 + escape_markdown(
                     ": a comma separated string (only a-z, underscores and dashes allowed, e.g. a-d, b)"
+                )
+            )
+        elif keyword_type == bool:
+            message.append(
+                f"`{escape_markdown(keyword)}`"
+                + escape_markdown(
+                    ": a boolean, true, yes, no, false are accepted values"
                 )
             )
         else:
