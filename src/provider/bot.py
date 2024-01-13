@@ -124,9 +124,9 @@ def default_filter(
             restaurant.offers_delivery(),
             restaurant.rating.votes >= minimum_rating_votes,
             restaurant.rating.score >= minimum_rating_score,
-            min_order_value is None or min_order_value < max_order_value,
+            min_order_value is None or min_order_value <= max_order_value,
             "frankfurt" not in restaurant.location.city.lower(),
-            duration is None or duration < max_duration,
+            duration is None or duration <= max_duration,
         ]
     )
 
