@@ -9,8 +9,9 @@ import telegram.constants
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from provider.helper import escape_markdown
 from provider.logger import create_logger
-from provider.models import RestaurantListItem, Restaurant, escape_markdown
+from provider.models import RestaurantListItem, Restaurant
 
 
 def get_restaurant_list_url(
