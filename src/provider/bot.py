@@ -106,7 +106,14 @@ async def get_random_restaurants(
     return random.choices(chosen_restaurants, k=count)
 
 
-def default_filter(restaurant: Restaurant) -> bool:
+def default_filter(
+    restaurant: Restaurant,
+    *,
+    max_order_value: float = 50.0,
+    max_duration: int = 90,
+    minimum_rating_score: 2.1,
+    minimum_rating_votes: 1,
+) -> bool:
     delivery_info = restaurant.delivery_info()
     min_order_value = delivery_info.min_order_value if delivery_info else None
     duration = delivery_info.duration if delivery_info else None
@@ -115,11 +122,11 @@ def default_filter(restaurant: Restaurant) -> bool:
         [
             restaurant.is_open(),
             restaurant.offers_delivery(),
-            restaurant.rating.votes > 0,
-            restaurant.rating.score > 2.0,
-            min_order_value is None or min_order_value < 50.0,
+            restaurant.rating.votes >= minimum_rating_votes,
+            restaurant.rating.score >= minimum_rating_score,
+            min_order_value is None or min_order_value < max_order_value,
             "frankfurt" not in restaurant.location.city.lower(),
-            duration is None or duration < 90,
+            duration is None or duration < max_duration,
         ]
     )
 
