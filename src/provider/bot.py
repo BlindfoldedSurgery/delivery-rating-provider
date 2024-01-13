@@ -108,8 +108,15 @@ async def command_random[
 
     if context.args:
         args = "\n".join(context.args)
-        kwargs.update({k.lower(): int(v) for k, v in re.findall(r"(\w+):(\d+)", args)})
-
+        kwargs.update(
+            {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
+        )
+        kwargs.update(
+            {
+                k.lower(): v.split(",")
+                for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)
+            }
+        )
     if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
         kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
 
