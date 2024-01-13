@@ -112,6 +112,27 @@ def filter_keyword_only_arguments_for_function(
     return {k: v for k, v in kwargs.items() if k in _default_filter_kwargs}
 
 
+def parse_context_args_regex(
+    argument: str,
+    value_map_fn: Callable[[str], Any],
+    regex: str,
+    key_map_fn: Callable[[str], str] = str.lower,
+    filter_fn: Callable[[str], bool] = lambda _: True,
+    exclude_keys: list[str] | None = None,
+) -> dict:
+    if exclude_keys is None:
+        exclude_keys = []
+    return {
+        key_map_fn(k): value_map_fn(v)
+        for k, v in re.findall(regex, argument)
+        if filter_fn(v) and k not in exclude_keys
+    }
+
+
+def is_truthy_boolean_string(value: str) -> bool:
+    return value.lower() in ["yes", "true"]
+
+
 def parse_context_args(_args: list[str] | None) -> dict:
     if not _args:
         return {}
@@ -121,24 +142,21 @@ def parse_context_args(_args: list[str] | None) -> dict:
     kwargs: dict[str, Any] = default_filter_args()
 
     # int/float
-    kwargs.update({k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)})
-
+    kwargs.update(parse_context_args_regex(args, float, r"(\w+):(\d+(?:\.\d+)?)"))
     # bool
     kwargs.update(
-        {
-            k.lower(): v.lower() in ["yes", "true"]
-            for k, v in re.findall(r"(\w+):(no|yes|true|false)", args)
-            if k not in kwargs.keys()
-        }
+        parse_context_args_regex(
+            args,
+            is_truthy_boolean_string,
+            r"(\w+):(no|yes|true|false)",
+            exclude_keys=list(kwargs.keys()),
+        )
     )
-
     # list[str]
     kwargs.update(
-        {
-            k.lower(): v.split(",")
-            for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)
-            if k not in kwargs.keys()
-        }
+        parse_context_args_regex(
+            args, lambda v: v.split(","), r"(\w+):((?:[\w-]+,?)+)", exclude_keys=list(kwargs.keys())
+        )
     )
 
     # validate keyword types (for bool/float/int)
