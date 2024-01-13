@@ -198,7 +198,7 @@ class Restaurant:
             for category in self.menu.categories
             if "getränke" not in category.name.lower()
         )
-        categories = f"Kategorie:\n{category_names}" if category_names else ""
+        categories = f"Kategorien:\n{category_names}" if category_names else ""
         product_names = "\n".join(
             f"    _{escape_markdown(product.name)}_"
             for product in self.menu.popular_products
