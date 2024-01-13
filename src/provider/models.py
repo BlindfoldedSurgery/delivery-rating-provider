@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
 from typing import Tuple, Self
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -1006,7 +1007,7 @@ class Restaurant:
         return cls.from_dict(value, list_item)
 
     def is_open(self) -> bool:
-        now = datetime.now()
+        now = datetime.now().astimezone(tz=ZoneInfo("Europe/Berlin"))
         return any(now in frame for frame in self.delivery_timeframes)
 
     def telegram_markdown_v2(self) -> str:
