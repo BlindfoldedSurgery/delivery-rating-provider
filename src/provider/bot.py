@@ -159,7 +159,7 @@ def validate_keyword_types(kwargs: dict, *, function: Callable = default_filter)
                     raise ValueError(f"invalid int/float input for {keyword}")
 
 
-def parse_context_args(_args: list[str] | None) -> dict:
+def parse_context_args(_args: list[str] | None) -> dict[str, list[str] | bool | int | float]:
     if not _args:
         return {}
 
