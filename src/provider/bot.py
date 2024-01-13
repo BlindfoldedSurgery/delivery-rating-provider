@@ -53,6 +53,39 @@ def default_filter(
     )
 
 
+async def command_get_available_filter_arguments(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+):
+    argspec = inspect.getfullargspec(default_filter)
+    kwonly_annotations = {
+        k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
+    }
+    message = []
+    for keyword, keyword_type in kwonly_annotations.items():
+        if keyword_type == int or keyword_type == float:
+            message.append(
+                f"*{escape_markdown(keyword)}*"
+                + escape_markdown(": a number (e.g. 1, 1.0)")
+            )
+        elif (
+            str(keyword_type) == "list[str]" or str(keyword_type) == "list[str] | None"
+        ):
+            message.append(
+                f"*{escape_markdown(keyword)}*"
+                + escape_markdown(
+                    ": a comma separated string (only a-z, underscores and dashes allowed, e.g. a-d, b)"
+                )
+            )
+        else:
+            message.append(
+                f"*{escape_markdown(keyword)}* is of type *{escape_markdown(str(keyword_type))}*"
+            )
+
+    return await update.effective_message.reply_text(  # type: ignore
+        text="\n\n".join(message), parse_mode=telegram.constants.ParseMode.MARKDOWN_V2
+    )
+
+
 async def command_random[
     #   PEP 695 generics are not yet supported
     **P  # type: ignore

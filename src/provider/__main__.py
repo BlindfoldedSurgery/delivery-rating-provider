@@ -25,6 +25,11 @@ def main():
     random_handler = telegram.ext.CommandHandler("random", bot.command_random)
     application.add_handler(random_handler)
 
+    get_available_filter_arguments_handler = telegram.ext.CommandHandler(
+        "get_available_filter_arguments", bot.command_get_available_filter_arguments
+    )
+    application.add_handler(get_available_filter_arguments_handler)
+
     # noinspection PyTypeChecker
     application.add_error_handler(bot.error_handler)
     create_logger(inspect.currentframe().f_code.co_name).info("Starting")
