@@ -23,12 +23,12 @@ class ColophonData:
     street_number: str
     postal_code: str
     city: str
-    legal_entity: str
-    legal_representative_name: str
-    legal_name: str
+    legal_entity: str | None
+    legal_representative_name: str | None
+    legal_name: str | None
     legal_entity_class: str | None
-    email: str
-    fax: str
+    email: str | None
+    fax: str | None
     chamber_of_commerce: list[ChamberOfCommerce]
     vat_number: str | None
     dispute_resolution_link: str | None
