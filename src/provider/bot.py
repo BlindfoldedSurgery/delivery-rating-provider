@@ -103,10 +103,13 @@ def parse_context_args(_args: list[str] | None) -> dict:
     args = "\n".join(_args)
 
     kwargs: dict[str, Any] = default_filter_args()
+
+    # int/float
     kwargs.update(
         {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
     )
 
+    # bool
     kwargs.update(
         {
             k.lower(): v.lower() in ["yes", "true"]
@@ -115,6 +118,7 @@ def parse_context_args(_args: list[str] | None) -> dict:
         }
     )
 
+    # list[str]
     kwargs.update(
         {
             k.lower(): v.split(",")
@@ -122,6 +126,8 @@ def parse_context_args(_args: list[str] | None) -> dict:
             if k not in kwargs.keys()
         }
     )
+
+    # validate keyword types (for bool/float/int)
     argspec = inspect.getfullargspec(default_filter)
     kwonly_annotations = {
         k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
@@ -144,7 +150,8 @@ def parse_context_args(_args: list[str] | None) -> dict:
 
 
 async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    kwargs = parse_context_args(context.args)
+    kwargs = default_filter_args()
+    kwargs.update(parse_context_args(context.args))
     kwargs.update({"count": 10000})
     url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
 
