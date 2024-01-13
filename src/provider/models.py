@@ -1,4 +1,5 @@
 import inspect
+import math
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -410,8 +411,17 @@ class DeliveryTimeframe:
             d["formattedEnd"],
         )
 
-    def __contains__(self, item: datetime) -> bool:
-        offset = item.hour * 60 + item.minute
+    def is_open(self, item: datetime) -> bool:
+        offset_day = 0
+        hours_diff = self.end // 60
+
+        if hours_diff > 24:
+            # we're gonna ignore seconds here (not even supported by takeaway)
+            rem = int(abs(math.remainder(self.end, 60)))
+            item = item.replace(day=item.day - 1, hour=(hours_diff - 24), minute=rem)
+            offset_day = 24
+
+        offset = ((offset_day + item.hour) * 60) + item.minute
 
         return self.start <= offset <= self.end
 
@@ -428,11 +438,8 @@ class DeliveryTimeframesDay:
             Weekday(int(item[0])),
         )
 
-    def __contains__(self, item: datetime) -> bool:
-        if not self.weekday.is_isoweekday(datetime.now().isoweekday()):
-            return False
-
-        return any(item in frame for frame in self.timeframes)
+    def is_open(self, item: datetime) -> bool:
+        return any(frame.is_open(item) for frame in self.timeframes)
 
 
 @dataclass
@@ -1008,7 +1015,7 @@ class Restaurant:
 
     def is_open(self) -> bool:
         now = datetime.now().astimezone(tz=ZoneInfo("Europe/Berlin"))
-        return any(now in frame for frame in self.delivery_timeframes)
+        return any(frame.is_open(now) for frame in self.delivery_timeframes)
 
     def telegram_markdown_v2(self) -> str:
         brand = escape_markdown(
