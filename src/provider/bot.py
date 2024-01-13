@@ -113,7 +113,7 @@ def default_filter(restaurant: Restaurant) -> bool:
             restaurant.rating.score > 2.0,
             min_order_value is None or min_order_value < 50.0,
             "frankfurt" not in restaurant.location.city.lower(),
-            duration is None or restaurant.delivery_info().duration < 90,
+            duration is None or duration < 90,
         ]
     )
 
