@@ -60,25 +60,28 @@ async def command_get_available_filter_arguments(
     kwonly_annotations = {
         k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs
     }
-    message = []
+    message = [
+        "filter args can be given as followed: `{key}:{value}`\n"
+        r"e\.g\.: `minimum_rating_score:3\.0`",
+    ]
     for keyword, keyword_type in kwonly_annotations.items():
         if keyword_type == int or keyword_type == float:
             message.append(
-                f"*{escape_markdown(keyword)}*"
+                f"`{escape_markdown(keyword)}`"
                 + escape_markdown(": a number (e.g. 1, 1.0)")
             )
         elif (
             str(keyword_type) == "list[str]" or str(keyword_type) == "list[str] | None"
         ):
             message.append(
-                f"*{escape_markdown(keyword)}*"
+                f"`{escape_markdown(keyword)}`"
                 + escape_markdown(
                     ": a comma separated string (only a-z, underscores and dashes allowed, e.g. a-d, b)"
                 )
             )
         else:
             message.append(
-                f"*{escape_markdown(keyword)}* is of type *{escape_markdown(str(keyword_type))}*"
+                f"`{escape_markdown(keyword)}` is of type *{escape_markdown(str(keyword_type))}*"
             )
 
     return await update.effective_message.reply_text(  # type: ignore
