@@ -176,6 +176,10 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = f"failed to send reply: {str(e)}"
 
     message = escape_markdown(message)
+
+    # mypy complains that `effective_message` might be None, this cannot happen here since
+    # this method only called by the error handler which forces `effective_message` to be not `None`
+    # due to us having only `CommandHandler`s registered
     return await update.effective_message.reply_text(  # type: ignore
         message,
         reply_to_message_id=update.effective_message.message_id,  # type: ignore
