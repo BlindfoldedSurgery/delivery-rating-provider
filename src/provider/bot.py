@@ -142,20 +142,25 @@ def parse_context_args(_args: list[str] | None) -> dict:
     kwargs: dict[str, Any] = default_filter_args()
 
     # int/float
-    kwargs.update(parse_context_args_regex(args, float, r"(\w+):(\d+(?:\.\d+)?)"))
+    kwargs.update(
+        parse_context_args_regex(args, value_map_fn=float, regex=r"(\w+):(\d+(?:\.\d+)?)")
+    )
     # bool
     kwargs.update(
         parse_context_args_regex(
             args,
-            is_truthy_boolean_string,
-            r"(\w+):(no|yes|true|false)",
+            value_map_fn=is_truthy_boolean_string,
+            regex=r"(\w+):(no|yes|true|false)",
             exclude_keys=list(kwargs.keys()),
         )
     )
     # list[str]
     kwargs.update(
         parse_context_args_regex(
-            args, lambda v: v.split(","), r"(\w+):((?:[\w-]+,?)+)", exclude_keys=list(kwargs.keys())
+            args,
+            value_map_fn=lambda v: v.split(","),
+            regex=r"(\w+):((?:[\w-]+,?)+)",
+            exclude_keys=list(kwargs.keys()),
         )
     )
 
