@@ -22,6 +22,39 @@ def default_filter_args() -> dict[str, Any]:
     return {"postal_code": DEFAULT_POSTAL_CODE, "cities_to_ignore": [], "count": 1}
 
 
+def filter_cuisines(
+    restaurant: Restaurant, cuisines: list[str] | None, *, exclude: bool = False
+) -> bool:
+    if cuisines is None:
+        return not exclude
+
+    if not exclude:
+        if len(cuisines) == 0:
+            return True
+
+    cuisine_types = [CuisineType.from_str(c) for c in cuisines]
+    return any(
+        [
+            True
+            for cuisine_type in cuisine_types
+            if cuisine_type in restaurant.cuisine_types
+        ]
+    )
+
+
+def filter_city(restaurant: Restaurant, cities_to_ignore: list[str] | None) -> bool:
+    if cities_to_ignore is None:
+        return True
+
+    return any(
+        [
+            True
+            for to_ignore in cities_to_ignore
+            if to_ignore.lower() in restaurant.location.city.lower()
+        ]
+    )
+
+
 def default_filter(
     restaurant: Restaurant,
     *,
@@ -49,41 +82,17 @@ def default_filter(
     :param allow_pickup: by default only restaurants which support delivery are filtered
     :return: whether the restaurant fulfills all the given criteria
     """
-    if cities_to_ignore is None:
-        cities_to_ignore = []
-    if cuisines_to_include is None:
-        cuisines_to_include = []
-    if cuisines_to_exclude is None:
-        cuisines_to_exclude = []
-
     delivery_info = restaurant.delivery_info()
     min_order_value = delivery_info.min_order_value if delivery_info else None
     duration = delivery_info.duration if delivery_info else None
 
-    is_city_to_ignore = any(
-        [
-            True
-            for to_ignore in cities_to_ignore
-            if to_ignore.lower() in restaurant.location.city.lower()
-        ]
-    )
+    is_city_to_ignore = filter_city(restaurant, cities_to_ignore)
 
-    cuisines_to_exclude_types = [CuisineType.from_str(c) for c in cuisines_to_exclude]
-    has_cuisine_to_exclude = any(
-        [
-            True
-            for to_ignore in cuisines_to_exclude_types
-            if to_ignore in restaurant.cuisine_types
-        ]
+    has_cuisine_to_exclude = filter_cuisines(
+        restaurant, cuisines_to_exclude, exclude=True
     )
-
-    cuisines_to_include_types = [CuisineType.from_str(c) for c in cuisines_to_include]
-    has_cuisine_to_include = len(cuisines_to_include) == 0 or any(
-        [
-            True
-            for to_ignore in cuisines_to_include_types
-            if to_ignore in restaurant.cuisine_types
-        ]
+    has_cuisine_to_include = filter_cuisines(
+        restaurant, cuisines_to_include, exclude=False
     )
 
     pickup_delivery = (
