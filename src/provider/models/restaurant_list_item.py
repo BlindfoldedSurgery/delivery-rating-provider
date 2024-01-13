@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Self
 
+from provider.helper import to_pascal_case
 from provider.models.brand import BrandItem
 from provider.models.common import (
     Indicator,
@@ -9,7 +10,6 @@ from provider.models.common import (
     Location,
     PaymentMethod,
     SupportOption,
-    to_pascal_case,
     ShippingInfo,
 )
 

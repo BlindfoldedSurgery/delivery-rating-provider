@@ -6,10 +6,10 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
+from provider.helper import escape_markdown
 from provider.models.brand import Brand
 from provider.models.colophone import Colophon
 from provider.models.common import (
-    escape_markdown,
     DeliveryTimeframesDay,
     Rating,
     Location,

@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Self, Tuple
 
-from provider.helper import to_pascal_case, escape_markdown
+from provider.helper import escape_markdown, to_pascal_case
 
 
 class IdEnum(Enum):
