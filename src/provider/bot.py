@@ -15,7 +15,7 @@ from provider.takeaway import get_random_restaurants, get_restaurant_list_url
 from provider.takeaway.models import Restaurant, SupportOption
 from provider.takeaway.models.restaurant_list_item import CuisineType
 
-DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
+DEFAULT_POSTAL_CODE = os.getenv("DEFAULT_POSTAL_CODE", "64293")
 
 
 def default_filter_args() -> dict[str, Any]:
@@ -75,7 +75,7 @@ def default_filter(
     :param max_duration: maximum delivery duration in minutes
     :param minimum_rating_score: minimum rating score (0.0 - 5.0)
     :param minimum_rating_votes: minimum votes for the restaurant
-    :param cities_to_ignore: list of cities to ignore (default is 'frankfurt' for the postal code 64293)
+    :param cities_to_ignore: list of cities to ignore (default is 'frankfurt' for the postal code '64293')
     :param is_open_in_minutes: include restaurants which open x minutes from now
     :param cuisines_to_include: list of cuisines which a restaurant must include
     :param cuisines_to_exclude: list of cuisines which must not appear in restaurants choices
@@ -296,7 +296,7 @@ async def command_random[
         kwargs.update(parse_context_args(context.args))
 
     start = datetime.now()
-    url = get_restaurant_list_url(postal_code=int(kwargs["postal_code"]))  # type: ignore
+    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
 
     filter_arguments = filter_keyword_only_arguments_for_function(kwargs)
     restaurants = await get_random_restaurants(

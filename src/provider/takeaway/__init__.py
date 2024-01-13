@@ -11,7 +11,7 @@ from provider.takeaway.models import RestaurantListItem, Restaurant
 
 
 def get_restaurant_list_url(
-    postal_code: int,
+    postal_code: str,
     *,
     base_url: str = "https://cw-api.takeaway.com",
     limit: int = 0,
