@@ -27,10 +27,13 @@ class CuisineType:
             _name = value.group(1).replace("-", " ")
             return to_pascal_case(_name)
 
-        return self.id
+        return to_pascal_case(self.id)
+
+    def __eq__(self, other):
+        return self.id == other.id or self.name() == other.name()
 
     @classmethod
-    def from_dict(cls, s: str) -> Self:
+    def from_str(cls, s: str) -> Self:
         return cls(s)
 
 
@@ -53,7 +56,7 @@ class RestaurantListItem:
     def from_dict(cls, d: dict) -> Self:
         indicators = [Indicator.from_key(s) for s in d["indicators"]]
         brand = BrandItem.from_dict(d["brand"])
-        cuisine_types = [CuisineType.from_dict(c) for c in d["cuisineTypes"]]
+        cuisine_types = [CuisineType.from_str(c) for c in d["cuisineTypes"]]
         rating = Rating.from_dict(d["rating"])
         location = Location.from_dict(d["location"])
         supports = [SupportOption.from_key(s) for s in d["supports"]]

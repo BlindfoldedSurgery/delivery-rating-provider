@@ -13,6 +13,7 @@ from provider.helper import escape_markdown
 from provider.logger import create_logger
 from provider.takeaway import get_random_restaurants, get_restaurant_list_url
 from provider.takeaway.models import Restaurant
+from provider.takeaway.models.restaurant_list_item import CuisineType
 
 DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
 
@@ -26,9 +27,15 @@ def default_filter(
     minimum_rating_votes: int = 1,
     cities_to_ignore: list[str] | None = None,
     is_open_in_minutes: int = 0,
+    cuisines_to_include: list[str] | None = None,
+    cuisines_to_exclude: list[str] | None = None,
 ) -> bool:
     if cities_to_ignore is None:
         cities_to_ignore = []
+    if cuisines_to_include is None:
+        cuisines_to_include = []
+    if cuisines_to_exclude is None:
+        cuisines_to_exclude = []
 
     delivery_info = restaurant.delivery_info()
     min_order_value = delivery_info.min_order_value if delivery_info else None
@@ -41,6 +48,24 @@ def default_filter(
             if to_ignore.lower() in restaurant.location.city.lower()
         ]
     )
+    cuisines_to_exclude_types = [CuisineType.from_str(c) for c in cuisines_to_exclude]
+    has_cuisine_to_exclude = any(
+        [
+            True
+            for to_ignore in cuisines_to_exclude_types
+            if to_ignore in restaurant.cuisine_types
+        ]
+    )
+    cuisines_to_include_types = [CuisineType.from_str(c) for c in cuisines_to_include]
+
+    has_cuisine_to_include = any(
+        [
+            True
+            for to_ignore in cuisines_to_include_types
+            if to_ignore in restaurant.cuisine_types
+        ]
+    )
+
     return all(
         [
             restaurant.is_open(is_open_in_minutes),
@@ -50,12 +75,14 @@ def default_filter(
             min_order_value is None or min_order_value <= max_order_value,
             duration is None or duration <= max_duration,
             not is_city_to_ignore,
+            has_cuisine_to_include,
+            not has_cuisine_to_exclude,
         ]
     )
 
 
 async def command_get_available_filter_arguments(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+    update: Update, _: ContextTypes.DEFAULT_TYPE
 ):
     argspec = inspect.getfullargspec(default_filter)
     kwonly_annotations = {
