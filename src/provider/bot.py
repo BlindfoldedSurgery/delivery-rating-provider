@@ -105,8 +105,10 @@ def default_filter(
     )
 
 
-def get_filter_arguments(kwargs: dict) -> dict:
-    _default_filter_kwargs = inspect.getfullargspec(default_filter).kwonlyargs
+def filter_keyword_only_arguments_for_function(
+    kwargs: dict, *, function: Callable = default_filter
+) -> dict:
+    _default_filter_kwargs = inspect.getfullargspec(function).kwonlyargs
     return {k: v for k, v in kwargs.items() if k in _default_filter_kwargs}
 
 
@@ -165,7 +167,7 @@ async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     kwargs.update({"count": 10000})
     url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
 
-    filter_arguments = get_filter_arguments(kwargs)
+    filter_arguments = filter_keyword_only_arguments_for_function(kwargs)
     restaurants = await get_random_restaurants(
         url,
         # caused by PEP 695 generics are not yet supported
@@ -256,7 +258,7 @@ async def command_random[
     start = datetime.now()
     url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
 
-    filter_arguments = get_filter_arguments(kwargs)
+    filter_arguments = filter_keyword_only_arguments_for_function(kwargs)
     restaurants = await get_random_restaurants(
         url,
         # caused by PEP 695 generics are not yet supported
