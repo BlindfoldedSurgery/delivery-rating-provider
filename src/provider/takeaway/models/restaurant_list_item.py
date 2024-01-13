@@ -1,3 +1,4 @@
+import inspect
 import re
 from dataclasses import dataclass
 from typing import Self
@@ -31,6 +32,9 @@ class CuisineType:
 
     def __eq__(self, other):
         return self.id == other.id or self.name() == other.name()
+
+    def __hash__(self):
+        return hash(self.name())
 
     @classmethod
     def from_str(cls, s: str) -> Self:

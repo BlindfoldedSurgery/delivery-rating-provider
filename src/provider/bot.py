@@ -18,6 +18,32 @@ from provider.takeaway.models.restaurant_list_item import CuisineType
 DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
 
 
+def default_filter_args():
+    return {"postal_code": DEFAULT_POSTAL_CODE, "cities_to_ignore": [], "count": 1}
+
+
+def parse_context_args(args: list[str] | None) -> dict:
+    args = "\n".join(args)
+    kwargs = default_filter_args()
+    kwargs.update(
+        {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
+    )
+
+    kwargs.update(
+        {k.lower(): v.split(",") for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)}
+    )
+
+    if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
+        kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
+
+    return kwargs
+
+
+def get_filter_arguments(kwargs: dict) -> dict:
+    _default_filter_kwargs = inspect.getfullargspec(default_filter).kwonlyargs
+    return {k: v for k, v in kwargs.items() if k in _default_filter_kwargs}
+
+
 def default_filter(
     restaurant: Restaurant,
     *,
@@ -58,7 +84,7 @@ def default_filter(
     )
     cuisines_to_include_types = [CuisineType.from_str(c) for c in cuisines_to_include]
 
-    has_cuisine_to_include = any(
+    has_cuisine_to_include = len(cuisines_to_include) == 0 or any(
         [
             True
             for to_ignore in cuisines_to_include_types
@@ -79,6 +105,29 @@ def default_filter(
             not has_cuisine_to_exclude,
         ]
     )
+
+
+async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    kwargs = parse_context_args(context.args)
+    kwargs.update({"count": 10000})
+    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
+
+    filter_arguments = get_filter_arguments(kwargs)
+    restaurants = await get_random_restaurants(
+        url,
+        # caused by PEP 695 generics are not yet supported
+        filter_fn=lambda r: default_filter(r, **filter_arguments),  # type: ignore
+        count=kwargs["count"],  # type: ignore
+    )
+    print(len(restaurants))
+    cuisine_types = set()
+    for restaurant in restaurants:
+        print(*restaurant.cuisine_types, sep="\n")
+        cuisine_types.update(restaurant.cuisine_types)
+
+    cuisine_names = [ct.name() for ct in cuisine_types if ct]
+    message = sorted([name for name in cuisine_names if name])
+    return await update.effective_message.reply_text(text="\n".join(message))  # type: ignore
 
 
 async def command_get_available_filter_arguments(
@@ -135,27 +184,15 @@ async def command_random[
     ] = default_filter,  # type: ignore
 ):
     logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    kwargs = {"postal_code": DEFAULT_POSTAL_CODE, "count": 1, "cities_to_ignore": []}
+    kwargs = default_filter_args()
 
     if context.args:
-        args = "\n".join(context.args)
-        kwargs.update(
-            {k.lower(): float(v) for k, v in re.findall(r"(\w+):(\d+(?:\.\d+)?)", args)}
-        )
-        kwargs.update(
-            {
-                k.lower(): v.split(",")
-                for k, v in re.findall(r"(\w+):((?:[\w-]+,?)+)", args)
-            }
-        )
-    if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
-        kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
+        kwargs.update(parse_context_args(context.args))
 
     start = datetime.now()
     url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
 
-    default_filter_kwargs = inspect.getfullargspec(default_filter).kwonlyargs
-    filter_arguments = {k: v for k, v in kwargs.items() if k in default_filter_kwargs}
+    filter_arguments = get_filter_arguments(kwargs)
     restaurants = await get_random_restaurants(
         url,
         # caused by PEP 695 generics are not yet supported
