@@ -113,11 +113,22 @@ def default_filter(
     max_duration: int = 90,
     minimum_rating_score: float = 2.1,
     minimum_rating_votes: int = 1,
+    cities_to_ignore: list[str] | None = None,
 ) -> bool:
+    if cities_to_ignore is None:
+        cities_to_ignore = []
+
     delivery_info = restaurant.delivery_info()
     min_order_value = delivery_info.min_order_value if delivery_info else None
     duration = delivery_info.duration if delivery_info else None
 
+    is_city_to_ignore = any(
+        [
+            True
+            for to_ignore in cities_to_ignore
+            if to_ignore.lower() in restaurant.location.city.lower()
+        ]
+    )
     return all(
         [
             restaurant.is_open(),
@@ -125,33 +136,42 @@ def default_filter(
             restaurant.rating.votes >= minimum_rating_votes,
             restaurant.rating.score >= minimum_rating_score,
             min_order_value is None or min_order_value <= max_order_value,
-            "frankfurt" not in restaurant.location.city.lower(),
             duration is None or duration <= max_duration,
+            not is_city_to_ignore,
         ]
     )
 
 
-async def command_random(
+async def command_random[
+    **P
+](
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     *,
-    filter_fn: Callable[[Restaurant], bool] = default_filter,
+    filter_fn: Callable[
+        [
+            Restaurant,
+            P.kwargs,
+        ],
+        bool,
+    ] = default_filter,
 ):
     logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    kwargs = {
-        "postal_code": 64293,
-        "count": 1,
-    }
+    kwargs = {"postal_code": 64293, "count": 1, "cities_to_ignore": []}
 
     if context.args:
         args = "\n".join(context.args)
         kwargs.update({k: int(v) for k, v in re.findall(r"(\w+):(\d+)", args)})
-        print(*kwargs.items(), sep="\n")
+
+    if kwargs["postal_code"] == 64293:
+        kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
 
     start = datetime.now()
-    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])
+    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
     restaurants = await get_random_restaurants(
-        url, filter_fn=filter_fn, count=kwargs["count"]
+        url,
+        filter_fn=lambda r: filter_fn(r, cities_to_ignore=kwargs["cities_to_ignore"]),
+        count=kwargs["count"],  # type: ignore
     )
     if restaurants:
         logger.debug(
