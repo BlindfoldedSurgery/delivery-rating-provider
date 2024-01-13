@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import os
 import random
 import re
 from datetime import datetime
@@ -14,6 +15,8 @@ from telegram.ext import ContextTypes
 from provider.helper import escape_markdown
 from provider.logger import create_logger
 from provider.models import RestaurantListItem, Restaurant
+
+DEFAULT_POSTAL_CODE = int(os.getenv("DEFAULT_POSTAL_CODE", 64293))
 
 
 def get_restaurant_list_url(
@@ -143,34 +146,38 @@ def default_filter(
 
 
 async def command_random[
-    **P
+    #   PEP 695 generics are not yet supported
+    **P  # type: ignore
 ](
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     *,
-    filter_fn: Callable[
+    # caused by  PEP 695 generics are not yet supported
+    filter_fn: Callable[  # type: ignore
         [
             Restaurant,
             P.kwargs,
         ],
         bool,
-    ] = default_filter,
+        # caused by  PEP 695 generics are not yet supported
+    ] = default_filter,  # type: ignore
 ):
     logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    kwargs = {"postal_code": 64293, "count": 1, "cities_to_ignore": []}
+    kwargs = {"postal_code": DEFAULT_POSTAL_CODE, "count": 1, "cities_to_ignore": []}
 
     if context.args:
         args = "\n".join(context.args)
         kwargs.update({k: int(v) for k, v in re.findall(r"(\w+):(\d+)", args)})
 
-    if kwargs["postal_code"] == 64293:
+    if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
         kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
 
     start = datetime.now()
     url = get_restaurant_list_url(postal_code=kwargs["postal_code"])  # type: ignore
     restaurants = await get_random_restaurants(
         url,
-        filter_fn=lambda r: filter_fn(r, cities_to_ignore=kwargs["cities_to_ignore"]),
+        # caused by PEP 695 generics are not yet supported
+        filter_fn=lambda r: filter_fn(r, cities_to_ignore=kwargs["cities_to_ignore"]),  # type: ignore
         count=kwargs["count"],  # type: ignore
     )
     if restaurants:
