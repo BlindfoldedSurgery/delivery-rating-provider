@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 import random
+import re
 from datetime import datetime
 from typing import Optional, Callable
 
@@ -16,7 +17,7 @@ from provider.models import RestaurantListItem, Restaurant
 
 
 def get_restaurant_list_url(
-    postal_code: str,
+    postal_code: int,
     *,
     base_url: str = "https://cw-api.takeaway.com",
     limit: int = 0,
@@ -130,16 +131,21 @@ async def command_random(
     filter_fn: Callable[[Restaurant], bool] = default_filter,
 ):
     logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
-    postal_code = "64293"
-    count = 1
+    kwargs = {
+        "postal_code": 64293,
+        "count": 1,
+    }
 
     if context.args:
-        postal_code = context.args[0]
-        logger.debug(f"retrieving items for postal code {postal_code}")
+        args = "\n".join(context.args)
+        kwargs.update({k: int(v) for k, v in re.findall(r"(\w+):(\d+)", args)})
+        print(*kwargs.items(), sep="\n")
 
     start = datetime.now()
-    url = get_restaurant_list_url(postal_code=postal_code)
-    restaurants = await get_random_restaurants(url, filter_fn=filter_fn, count=count)
+    url = get_restaurant_list_url(postal_code=kwargs["postal_code"])
+    restaurants = await get_random_restaurants(
+        url, filter_fn=filter_fn, count=kwargs["count"]
+    )
     if restaurants:
         logger.debug(
             f"{(datetime.now() - start).seconds}s to retrieve filtered restaurant list"
