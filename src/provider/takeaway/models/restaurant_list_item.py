@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Self
 
 from provider.helper import to_pascal_case
-from provider.models.brand import BrandItem
-from provider.models.common import (
+from provider.takeaway.models.brand import BrandItem
+from provider.takeaway.models.common import (
     Indicator,
     Rating,
     Location,

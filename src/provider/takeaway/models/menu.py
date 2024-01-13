@@ -2,7 +2,12 @@ from dataclasses import dataclass
 from enum import auto
 from typing import Self, Tuple
 
-from provider.models.common import IdEnum, ShippingType, DeliveryTimeframesDay, Weekday
+from provider.takeaway.models.common import (
+    IdEnum,
+    ShippingType,
+    DeliveryTimeframesDay,
+    Weekday,
+)
 
 
 @dataclass

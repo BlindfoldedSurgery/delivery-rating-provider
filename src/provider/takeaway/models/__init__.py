@@ -8,9 +8,10 @@ import httpx
 from aiocache import cached
 
 from provider.helper import escape_markdown
-from provider.models.brand import Brand
-from provider.models.colophone import Colophon
-from provider.models.common import (
+from provider.logger import create_logger
+from provider.takeaway.models.brand import Brand
+from provider.takeaway.models.colophone import Colophon
+from provider.takeaway.models.common import (
     DeliveryTimeframesDay,
     Rating,
     Location,
@@ -18,10 +19,9 @@ from provider.models.common import (
     Indicator,
     ShippingInfo,
 )
-from provider.logger import create_logger
-from provider.models.menu import Menu
-from provider.models.payment import Payment
-from provider.models.restaurant_list_item import RestaurantListItem
+from provider.takeaway.models.menu import Menu
+from provider.takeaway.models.payment import Payment
+from provider.takeaway.models.restaurant_list_item import RestaurantListItem
 
 
 @dataclass

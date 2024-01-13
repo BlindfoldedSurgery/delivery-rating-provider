@@ -1,8 +1,9 @@
-import math
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
 from typing import Self, Tuple
+
+import math
 
 from provider.helper import escape_markdown, to_pascal_case
 
