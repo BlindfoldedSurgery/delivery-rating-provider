@@ -104,6 +104,8 @@ class PaymentMethod(IdEnum):
     Giropay = auto()
     Bitpay = auto()
     PinAtHome = auto()
+    Twint = auto()
+    Postfinance = auto()
 
     def __str__(self):
         return str(self.value)
