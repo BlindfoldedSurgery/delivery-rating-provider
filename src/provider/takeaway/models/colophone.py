@@ -30,8 +30,8 @@ class ColophonData:
     email: str
     fax: str
     chamber_of_commerce: list[ChamberOfCommerce]
-    vat_number: str
-    dispute_resolution_link: str
+    vat_number: str | None
+    dispute_resolution_link: str | None
 
     @classmethod
     def from_dict(cls, d: dict) -> Self:
@@ -42,15 +42,15 @@ class ColophonData:
             d["streetNumber"],
             d["postalCode"],
             d["city"],
-            d["legalEntity"],
-            d["legalRepresentativeName"],
-            d["legalName"],
-            d["legalEntityClass"],
-            d["email"],
-            d["fax"],
-            [ChamberOfCommerce.from_dict(coc) for coc in d["chamberOfCommerce"]],
-            d["vatNumber"],
-            d["disputeResolutionLink"],
+            d.get("legalEntity"),
+            d.get("legalRepresentativeName"),
+            d.get("legalName"),
+            d.get("legalEntityClass"),
+            d.get("email"),
+            d.get("fax"),
+            [ChamberOfCommerce.from_dict(coc) for coc in d.get("chamberOfCommerce", [])],
+            d.get("vatNumber"),
+            d.get("disputeResolutionLink"),
         )
 
 

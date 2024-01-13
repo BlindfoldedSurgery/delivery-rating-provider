@@ -6,22 +6,23 @@ from provider.takeaway.models.common import ShippingType, PaymentMethod
 
 @dataclass
 class PaymentFee:
-    name: str
+    name: PaymentMethod
     type: str
     value: int
-    min_value: int
-    max_value: int
-    shipping_type: ShippingType
+    min_value: int | None
+    max_value: int | None
+    shipping_type: ShippingType | None
 
     @classmethod
-    def from_dict(cls, d: dict) -> Self:
+    def from_item(cls, item: Tuple[str, dict]) -> Self:
+        name, d = item
         return cls(
-            d["name"],
+            PaymentMethod.from_key(name),
             d["type"],
             d["value"],
-            d["minValue"],
-            d["maxValue"],
-            ShippingType.from_key(d["shippingType"]),
+            d.get("minValue"),
+            d.get("maxValue"),
+            ShippingType.from_key(d["shippingType"]) if d.get("shippingType") else None,
         )
 
 
@@ -57,7 +58,7 @@ class Payment:
         return cls(
             [PaymentMethod.from_key(p) for p in d["methods"]],
             d["paymentMethodFees"],
-            [PaymentFee.from_dict(p) for p in d["paymentMethodFees"]],
+            [PaymentFee.from_item(p) for p in d["paymentMethodFees"].items()],
             [Message.from_item(m) for m in d["messages"].items()],
             [Issuer.from_dict(i) for i in d["issuers"]],
         )
