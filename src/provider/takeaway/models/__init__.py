@@ -125,7 +125,7 @@ class Restaurant:
 
     @classmethod
     def from_dict(cls, d: dict, list_item: RestaurantListItem) -> Self:
-        times = d.get("delivery", {})["times"]
+        times = d.get("delivery", {}).get("times", {})
         delivery_timeframes = [DeliveryTimeframesDay.from_item(item) for item in times.items()]
         return cls(
             delivery_timeframes,
