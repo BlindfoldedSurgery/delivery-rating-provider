@@ -1,0 +1,3 @@
+import os
+
+DEFAULT_POSTAL_CODE = [os.getenv("DEFAULT_POSTAL_CODE", "64293")]

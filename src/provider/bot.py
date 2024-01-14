@@ -1,201 +1,23 @@
 import inspect
-import os
 import re
 from datetime import datetime
-from typing import Callable, Any
+from typing import Callable
 
 import httpx
 import telegram.constants
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from provider.context_args import parse_context_args
+from provider.filter import (
+    default_filter,
+    default_filter_args,
+    filter_keyword_only_arguments_for_function,
+)
 from provider.helper import escape_markdown
 from provider.logger import create_logger
 from provider.takeaway import get_random_restaurants, get_restaurant_list_url
-from provider.takeaway.models import Restaurant, SupportOption
-from provider.takeaway.models.restaurant_list_item import CuisineType
-
-DEFAULT_POSTAL_CODE = [os.getenv("DEFAULT_POSTAL_CODE", "64293")]
-
-
-def default_filter_args() -> dict[str, Any]:
-    return {
-        "postal_code": DEFAULT_POSTAL_CODE,
-        "cities_to_ignore": [],
-        "count": 1,
-        "language_code": "de",
-        "country_code": "de",
-    }
-
-
-def filter_cuisines(
-    restaurant: Restaurant, cuisines: list[str] | None, *, exclude: bool = False
-) -> bool:
-    if cuisines is None:
-        return not exclude
-
-    if not exclude:
-        if len(cuisines) == 0:
-            return True
-
-    cuisine_types = [CuisineType.from_str(c) for c in cuisines]
-    return any([True for cuisine_type in cuisine_types if cuisine_type in restaurant.cuisine_types])
-
-
-def filter_city(restaurant: Restaurant, cities_to_ignore: list[str] | None) -> bool:
-    if cities_to_ignore is None:
-        return True
-
-    return any(
-        [
-            True
-            for to_ignore in cities_to_ignore
-            if to_ignore.lower() in restaurant.location.city.lower()
-        ]
-    )
-
-
-def default_filter(
-    restaurant: Restaurant,
-    *,
-    max_order_value: float = 50.0,
-    max_duration: int = 90,
-    minimum_rating_score: float = 2.1,
-    minimum_rating_votes: int = 1,
-    cities_to_ignore: list[str] | None = None,
-    is_open_in_minutes: int = 0,
-    cuisines_to_include: list[str] | None = None,
-    cuisines_to_exclude: list[str] | None = None,
-    allow_pickup: bool = False,
-) -> bool:
-    """
-
-    :param restaurant:
-    :param max_order_value: minimum order value must be below (or equal to) this threshold
-    :param max_duration: maximum delivery duration in minutes
-    :param minimum_rating_score: minimum rating score (0.0 - 5.0)
-    :param minimum_rating_votes: minimum votes for the restaurant
-    :param cities_to_ignore: list of cities to ignore (default is 'frankfurt' for the postal code '64293')
-    :param is_open_in_minutes: include restaurants which open x minutes from now
-    :param cuisines_to_include: list of cuisines which a restaurant must include
-    :param cuisines_to_exclude: list of cuisines which must not appear in restaurants choices
-    :param allow_pickup: by default only restaurants which support delivery are filtered
-    :return: whether the restaurant fulfills all the given criteria
-    """
-    delivery_info = restaurant.delivery_info()
-    min_order_value = delivery_info.min_order_value if delivery_info else None
-    duration = delivery_info.duration if delivery_info else None
-
-    is_city_to_ignore = filter_city(restaurant, cities_to_ignore)
-
-    has_cuisine_to_exclude = filter_cuisines(restaurant, cuisines_to_exclude, exclude=True)
-    has_cuisine_to_include = filter_cuisines(restaurant, cuisines_to_include, exclude=False)
-
-    pickup_delivery = (
-        allow_pickup and restaurant.supports(SupportOption.Pickup)
-    ) or delivery_info is not None
-
-    return all(
-        [
-            restaurant.is_open(is_open_in_minutes),
-            restaurant.offers_delivery(),
-            restaurant.rating.votes >= minimum_rating_votes,
-            restaurant.rating.score >= minimum_rating_score,
-            min_order_value is None or min_order_value <= max_order_value,
-            duration is None or duration <= max_duration,
-            not is_city_to_ignore,
-            has_cuisine_to_include,
-            not has_cuisine_to_exclude,
-            pickup_delivery,
-        ]
-    )
-
-
-def filter_keyword_only_arguments_for_function(
-    kwargs: dict, *, function: Callable = default_filter
-) -> dict:
-    _default_filter_kwargs = inspect.getfullargspec(function).kwonlyargs
-    return {k: v for k, v in kwargs.items() if k in _default_filter_kwargs}
-
-
-def parse_context_args_regex(
-    argument: str,
-    value_map_fn: Callable[[str], Any],
-    regex: str,
-    key_map_fn: Callable[[str], str] = str.lower,
-    filter_fn: Callable[[str], bool] = lambda _: True,
-    exclude_keys: list[str] | None = None,
-) -> dict:
-    if exclude_keys is None:
-        exclude_keys = []
-    return {
-        key_map_fn(k): value_map_fn(v)
-        for k, v in re.findall(regex, argument)
-        if filter_fn(v) and k not in exclude_keys
-    }
-
-
-def is_truthy_boolean_string(value: str) -> bool:
-    return value.lower() in ["yes", "true"]
-
-
-def validate_keyword_types(kwargs: dict, *, function: Callable = default_filter) -> None:
-    """
-    :raises: ValueError when any keyword argument does not match the excpected type
-    """
-    # validate keyword types (for bool/float/int)
-    argspec = inspect.getfullargspec(function)
-    kwonly_annotations = {k: v for k, v in argspec.annotations.items() if k in argspec.kwonlyargs}
-    for keyword, keyword_type in kwonly_annotations.items():
-        if value := kwargs.get(keyword):
-            if value is None:
-                continue
-            elif keyword_type == bool:
-                if not isinstance(value, bool):
-                    raise ValueError(f"invalid boolean value for {keyword}")
-            elif keyword_type == int or keyword_type == float:
-                if not (isinstance(value, int) or isinstance(value, float)):
-                    raise ValueError(f"invalid int/float input for {keyword}")
-
-
-def parse_context_args(_args: list[str] | None) -> dict[str, list[str] | bool | int | float]:
-    if not _args:
-        return {}
-
-    args = "\n".join(_args)
-
-    kwargs: dict[str, Any] = default_filter_args()
-    default_keys = list(kwargs.keys())
-
-    # int/float
-    kwargs.update(
-        parse_context_args_regex(args, value_map_fn=float, regex=r"(\w+):(\d+(?:\.\d+)?)")
-    )
-    # bool
-    kwargs.update(
-        parse_context_args_regex(
-            args,
-            value_map_fn=is_truthy_boolean_string,
-            regex=r"(\w+):(no|yes|true|false)",
-            exclude_keys=list(set(list(kwargs.keys())) - set(default_keys)),
-        )
-    )
-    # list[str]
-    kwargs.update(
-        parse_context_args_regex(
-            args,
-            value_map_fn=lambda v: v.split(","),
-            regex=r"(\w+):((?:[\w-]+,?)+)",
-            exclude_keys=list(set(list(kwargs.keys())) - set(default_keys)),
-        )
-    )
-
-    validate_keyword_types(kwargs)
-
-    if kwargs["postal_code"] == DEFAULT_POSTAL_CODE:
-        kwargs["cities_to_ignore"] += ["frankfurt"]  # type: ignore
-
-    return kwargs
+from provider.takeaway.models import Restaurant
 
 
 async def command_cuisines(update: Update, context: ContextTypes.DEFAULT_TYPE):
