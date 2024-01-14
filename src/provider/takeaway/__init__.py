@@ -59,7 +59,7 @@ async def get_random_restaurants(
     country_code: str = "de",
 ) -> list[Restaurant]:
     """
-    :raises IndexError: if no restaurants have been
+    :raises IndexError: if no restaurants have been found
     :param url: URL to list all restaurants
     :param count: number of restauants to return
     :param filter_fn: filter restaurants (e.g. Restaurant#is_open)
