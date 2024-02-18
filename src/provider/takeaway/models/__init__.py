@@ -214,6 +214,7 @@ class Restaurant:
             f"    _{escape_markdown(product.name)}_" for product in self.menu.popular_products
         )
         popular_products = f"Populäre Produkte:\n{product_names}" if product_names else ""
+        lieferando_link = escape_markdown(f"https://lieferando.de/speisekarte/{self.primary_slug}")
 
         return rf"""*{brand}*
 Cuisines: {cuisines if cuisines else "/"}
@@ -221,6 +222,7 @@ Lieferzeit: {delivery_info.telegram_markdown_v2()}
 {escape_markdown(str(self.rating.score))}⭐ \({self.rating.votes} votes\)
 Bezahloptionen: {payment_methods}
 {self.location.telegram_markdown_v2()}
+[Lieferando]({lieferando_link})
 
 {categories}
 
