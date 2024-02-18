@@ -8,8 +8,8 @@ packages = [{ include = "provider", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-httpx = ">=0.25.2,<0.26.0"
-python-telegram-bot = "^20.7"
+httpx = ">=0.26.0"
+python-telegram-bot = "^20.8"
 aiocache = "^0.12.2"
 
 [tool.poetry.group.dev.dependencies]
@@ -17,7 +17,7 @@ mypy = "^1.7.1"
 black = "^24.0.0"
 ruff = "^0.2.0"
 pytest = "^8.0.0"
-pytest-asyncio = "^0.23.3"
+pytest-asyncio = "^0.23.5"
 
 [build-system]
 requires = ["poetry-core"]
