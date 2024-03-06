@@ -9,7 +9,7 @@ packages = [{ include = "provider", from = "src" }]
 [tool.poetry.dependencies]
 python = "^3.12"
 httpx = ">=0.26.0"
-python-telegram-bot = "^20.8"
+python-telegram-bot = "^21.0"
 aiocache = "^0.12.2"
 
 [tool.poetry.group.dev.dependencies]
